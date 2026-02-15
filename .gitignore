@@ -13,9 +13,7 @@
 # testing
 /coverage
 
-# agents
-/lib/agents
-/docs/
+
 
 # next.js
 /.next/
