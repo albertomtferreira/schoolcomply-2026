@@ -22,6 +22,53 @@ Canonical compliance logic reference: `docs/ComplianceDecisionTable.md`.
 - Compliance decision rules documented and linked to `docs/ComplianceDecisionTable.md`
 - MVP feature list frozen
 
+### Phase 0 Work Breakdown (Execution)
+
+1. Rule Contract (Sentinel + Forge)
+- Finalize the decision table as canonical.
+- Confirm edge cases: missing required records, inactive staff, multi-school staff impact.
+- Artifact: signed rule set in `docs/ComplianceDecisionTable.md`.
+- Status: baseline completed (Rule Contract v1), ready for implementation and test harness.
+
+2. Data Contract (Forge)
+- Freeze Firestore collection and field schema from `docs/Architecture.md`.
+- Confirm required indexes and deterministic ID conventions.
+- Artifact: schema + index checklist approved in architecture docs.
+
+3. Security Contract (Forge + Sentinel)
+- Define role-to-action matrix (superadmin, org_admin, school_admin, staff, viewer).
+- Draft Firestore rules for org, school, staff, training, and audit scopes.
+- Artifact: RBAC matrix + rules test cases.
+
+4. Aggregate Contract (Forge)
+- Define delta update logic for `orgCompliance` and `school_{schoolId}`.
+- Define nightly reconciliation logic and drift correction behavior.
+- Artifact: aggregate update and reconciliation spec.
+
+5. Platform Bootstrap (Forge)
+- Validate Firebase environment separation (`dev`, `staging`, `prod`).
+- Define environment variable contract and local emulator setup.
+- Artifact: reproducible local setup baseline.
+
+6. UX Truth Contract (Lumen + Sentinel)
+- Lock state semantics for dashboard badges and filters:
+  - `compliant`
+  - `expiring_soon`
+  - `non_compliant`
+  - `no_active_staff`
+- Artifact: state mapping aligned with decision table and architecture.
+
+### Phase 0 Exit Gate (Go/No-Go to Phase 1)
+
+All conditions must pass before starting Phase 1:
+
+- Compliance decision table approved and unchanged by unresolved comments.
+- Schema and index plan approved and frozen.
+- RBAC matrix approved and mapped to rule tests.
+- Aggregate strategy approved (delta updates + nightly reconciliation).
+- Firebase environment model validated for `dev/staging/prod`.
+- Local setup reproducible by a second person without undocumented steps.
+
 ---
 
 ## Phase 1 - Internal Pilot (Weeks 3-8)
