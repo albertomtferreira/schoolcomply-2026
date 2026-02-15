@@ -14,7 +14,8 @@
 /coverage
 
 # agents
-/src/lib/agents
+/lib/agents
+/docs/
 
 # next.js
 /.next/
