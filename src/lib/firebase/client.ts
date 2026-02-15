@@ -3,10 +3,9 @@ import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 
-import { getClientEnv, getServerEnv } from "@/lib/env";
+import { getClientEnv } from "@/lib/env";
 
 const clientEnv = getClientEnv();
-const serverEnv = getServerEnv();
 
 const firebaseConfig = {
   apiKey: clientEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -39,18 +38,22 @@ function parseHostPort(value: string, fallbackHost: string, fallbackPort: number
 }
 
 export function connectClientEmulators(): void {
-  if (emulatorsConnected || serverEnv.FIREBASE_USE_EMULATORS !== "true") {
+  if (
+    emulatorsConnected ||
+    clientEnv.NEXT_PUBLIC_FIREBASE_USE_EMULATORS !== "true"
+  ) {
     return;
   }
 
-  const authTarget = serverEnv.FIREBASE_AUTH_EMULATOR_HOST ?? "127.0.0.1:9099";
+  const authTarget =
+    clientEnv.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST ?? "127.0.0.1:9099";
   const firestoreTarget = parseHostPort(
-    serverEnv.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080",
+    clientEnv.NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080",
     "127.0.0.1",
     8080,
   );
   const storageTarget = parseHostPort(
-    serverEnv.FIREBASE_STORAGE_EMULATOR_HOST ?? "127.0.0.1:9199",
+    clientEnv.NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST ?? "127.0.0.1:9199",
     "127.0.0.1",
     9199,
   );

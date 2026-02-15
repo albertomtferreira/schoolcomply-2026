@@ -103,7 +103,7 @@ storage/{orgId}/{moduleId}/{schoolId}/{entityId}/{file}
 Store role, scope, and module entitlements:
 
 ```ts
-role: 'org_admin' | 'school_admin' | 'staff' | 'viewer'
+role: 'superadmin' | 'org_admin' | 'school_admin' | 'staff' | 'viewer'
 orgId: string
 schoolIds?: string[]
 staffId?: string
@@ -121,6 +121,7 @@ Authorization logic is always **role + orgId + scope + module entitlement**.
 Purpose: tenant root.
 
 Fields:
+
 - `name`
 - `slug`
 - `status: active|paused`
@@ -131,6 +132,7 @@ Fields:
 Purpose: school entities.
 
 Fields:
+
 - `name`
 - `code` (optional)
 - `address` (optional)
@@ -142,6 +144,7 @@ Fields:
 Purpose: app user profile + authorization scope + module access.
 
 Fields:
+
 - `uid`
 - `fullName`
 - `email`
@@ -158,6 +161,7 @@ Fields:
 Purpose: shared person entity used across modules.
 
 Fields:
+
 - `fullName`
 - `email` (optional)
 - `schoolIds: string[]`
@@ -173,16 +177,18 @@ Fields:
 Purpose: lightweight status summary for sidebar module indicators.
 
 Fields:
+
 - `state: 'green' | 'amber' | 'red' | 'grey'`
 - `openRiskCount: number`
 - `lastCalculatedAt`
 - `summary` (optional)
 
-### 5.6 organisations/{orgId}/aggregates/*
+### 5.6 organisations/{orgId}/aggregates/\*
 
 Purpose: fast shared dashboards.
 
 Suggested docs:
+
 - `aggregates/orgCompliance`
 - `aggregates/school_{schoolId}`
 
@@ -199,6 +205,7 @@ organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
 ```
 
 ### trainingTypes fields
+
 - `name`
 - `code` (optional)
 - `expires: boolean`
@@ -208,6 +215,7 @@ organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
 - `createdAt, updatedAt`
 
 ### trainingRecords fields
+
 - `staffId`
 - `schoolId`
 - `trainingTypeId`
@@ -222,6 +230,7 @@ organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
 - `daysToExpiry` (derived)
 
 ### auditLogs fields
+
 - `actorUserId`
 - `action`
 - `entityType`
@@ -236,10 +245,12 @@ organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
 ## 7. Query Patterns
 
 ### Core shell
+
 - Load user profile and `enabledModules`.
 - Load `moduleHealth/*` for entitled modules to render sidebar indicators.
 
 ### TrainingTrack
+
 - Staff list: query shared `staff` where `schoolIds array-contains {schoolId}`.
 - Training records: query `modules/trainingTrack/trainingRecords` where `schoolId == {schoolId}`.
 - Staff profile module view: query training records where `staffId == {staffId}`.
@@ -251,6 +262,7 @@ organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
 Detailed RBAC matrix and rule invariants are defined in `docs/SecurityContract.md`.
 
 Must-haves:
+
 - All reads/writes require auth.
 - Path org must equal user org.
 - Module path access requires module entitlement.
@@ -282,11 +294,13 @@ Must-haves:
 ## Appendix: ID Conventions
 
 Deterministic IDs:
+
 - `users/{uid}`
 - `aggregates/orgCompliance`
 - `moduleHealth/{moduleId}`
 
 Generated IDs:
+
 - `schools/{schoolId}`
 - `staff/{staffId}`
 - `modules/{moduleId}/trainingTypes/{trainingTypeId}`

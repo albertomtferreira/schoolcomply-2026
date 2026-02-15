@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -494,6 +494,159 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("viewerWithModule");
       await assertFails(getDoc(doc(db, "organisations/orgA/trainingRecords/rLegacy")));
+    });
+
+    it("24. user without trainingTrack entitlement reads moduleHealth/trainingTrack -> deny", async () => {
+      await seedUser("orgA", "viewerNoModule", {
+        role: "viewer",
+        schoolIds: ["s1"],
+        enabledModules: [],
+      });
+      await seedDoc("organisations/orgA/moduleHealth/trainingTrack", {
+        state: "amber",
+        openRiskCount: 2,
+        lastCalculatedAt: ts,
+      });
+
+      const db = authed("viewerNoModule");
+      await assertFails(getDoc(doc(db, "organisations/orgA/moduleHealth/trainingTrack")));
+    });
+
+    it("25. user with trainingTrack entitlement reads moduleHealth/trainingTrack -> allow", async () => {
+      await seedUser("orgA", "viewerWithModule", {
+        role: "viewer",
+        schoolIds: ["s1"],
+        enabledModules: ["trainingTrack"],
+      });
+      await seedDoc("organisations/orgA/moduleHealth/trainingTrack", {
+        state: "green",
+        openRiskCount: 0,
+        lastCalculatedAt: ts,
+      });
+
+      const db = authed("viewerWithModule");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/moduleHealth/trainingTrack")));
+    });
+
+    it("26. org_admin with trainingTrack entitlement writes moduleHealth/trainingTrack directly -> deny", async () => {
+      await seedUser("orgA", "adminA", {
+        role: "org_admin",
+        enabledModules: ["trainingTrack"],
+      });
+
+      const db = authed("adminA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/moduleHealth/trainingTrack"), {
+          state: "red",
+          openRiskCount: 3,
+          lastCalculatedAt: ts,
+        }),
+      );
+    });
+  });
+
+  describe("4.9 Scope Isolation (Org/School)", () => {
+    it("27. school_admin scoped to s1 reads schools/s2 in same org -> deny", async () => {
+      await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
+      await seedDoc("organisations/orgA/schools/s2", {
+        name: "School 2",
+        status: "active",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("saA");
+      await assertFails(getDoc(doc(db, "organisations/orgA/schools/s2")));
+    });
+
+    it("28. school_admin scoped to s1 reads training record for schoolId=s2 -> deny", async () => {
+      await seedUser("orgA", "saA", {
+        role: "school_admin",
+        schoolIds: ["s1"],
+        enabledModules: ["trainingTrack"],
+      });
+      await seedDoc("organisations/orgA/modules/trainingTrack/trainingRecords/rSchool2", {
+        staffId: "st2",
+        schoolId: "s2",
+        trainingTypeId: "tt1",
+        createdBy: "adminA",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("saA");
+      await assertFails(
+        getDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/rSchool2")),
+      );
+    });
+
+    it("29. viewer scoped to s1 reads users doc scoped only to s2 -> deny", async () => {
+      await seedUser("orgA", "viewerA", {
+        role: "viewer",
+        schoolIds: ["s1"],
+      });
+      await seedDoc("organisations/orgA/users/userS2", {
+        uid: "userS2",
+        fullName: "User S2",
+        email: "users2@example.com",
+        role: "staff",
+        orgId: "orgA",
+        schoolIds: ["s2"],
+        enabledModules: ["trainingTrack"],
+        isActive: true,
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("viewerA");
+      await assertFails(getDoc(doc(db, "organisations/orgA/users/userS2")));
+    });
+
+    it("30. staff scoped to s1 submits training record with schoolId=s2 -> deny", async () => {
+      await seedUser("orgA", "staffA", {
+        role: "staff",
+        schoolIds: ["s1"],
+        staffId: "st1",
+        enabledModules: ["trainingTrack"],
+      });
+
+      const db = authed("staffA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/rBadScope"), {
+          staffId: "st1",
+          schoolId: "s2",
+          trainingTypeId: "tt1",
+          createdBy: "staffA",
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+  });
+
+  describe("4.10 Seeded Module Health Indicators", () => {
+    it("31. seeded moduleHealth states are readable and preserved for entitled user", async () => {
+      await seedUser("orgA", "viewerWithModule", {
+        role: "viewer",
+        schoolIds: ["s1"],
+        enabledModules: ["trainingTrack"],
+      });
+
+      const seededStates = ["green", "amber", "red", "grey"] as const;
+      const db = authed("viewerWithModule");
+
+      for (const state of seededStates) {
+        await seedDoc("organisations/orgA/moduleHealth/trainingTrack", {
+          state,
+          openRiskCount: 0,
+          lastCalculatedAt: ts,
+        });
+
+        const snap = await assertSucceeds(
+          getDoc(doc(db, "organisations/orgA/moduleHealth/trainingTrack")),
+        );
+        expect(snap.data()?.state).toBe(state);
+      }
     });
   });
 });

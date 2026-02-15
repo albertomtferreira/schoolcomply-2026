@@ -15,6 +15,17 @@ export function getFirebaseAdminApp() {
   }
 
   const env = getServerEnv();
+  const useEmulators = env.FIREBASE_USE_EMULATORS === "true";
+  const resolvedProjectId =
+    env.FIREBASE_PROJECT_ID ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  if (useEmulators) {
+    // In emulator mode, avoid service account coupling and use project-scoped local emulators.
+    return initializeApp({
+      projectId: resolvedProjectId,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+  }
 
   if (
     env.FIREBASE_PROJECT_ID &&
@@ -33,7 +44,7 @@ export function getFirebaseAdminApp() {
 
   // Falls back to Application Default Credentials in trusted environments.
   return initializeApp({
-    projectId: env.FIREBASE_PROJECT_ID,
+    projectId: resolvedProjectId,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
 }
@@ -41,4 +52,3 @@ export function getFirebaseAdminApp() {
 export const adminAuth = getAuth(getFirebaseAdminApp());
 export const adminDb = getFirestore(getFirebaseAdminApp());
 export const adminStorage = getStorage(getFirebaseAdminApp());
-

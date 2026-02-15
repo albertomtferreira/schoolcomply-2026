@@ -6,6 +6,7 @@ Status: approved baseline for SchoolTrack shell and TrainingTrack module.
 Last updated: 2026-02-15.
 
 Canonical companions:
+
 - `docs/Architecture.md`
 - `docs/ComplianceDecisionTable.md`
 - `firestore.indexes.json`
@@ -17,10 +18,12 @@ Canonical companions:
 All documents are tenant-scoped under: `organisations/{orgId}/...`.
 
 Data ownership split:
+
 - **Core shared entities:** org, school, user, staff, shared aggregates, module health.
 - **Module-owned entities:** all domain objects inside `modules/{moduleId}/...`.
 
 Module IDs:
+
 - `trainingTrack`
 - `statutoryTrack`
 - `clubTrack`
@@ -33,6 +36,7 @@ Module IDs:
 ### 2.1 organisations/{orgId}
 
 Required fields:
+
 - `name: string`
 - `slug: string`
 - `status: 'active' | 'paused'`
@@ -42,22 +46,25 @@ Required fields:
 ### 2.2 organisations/{orgId}/schools/{schoolId}
 
 Required fields:
+
 - `name: string`
 - `status: 'active' | 'archived'`
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`
 
 Optional fields:
+
 - `code: string`
 - `address: string`
 
 ### 2.3 organisations/{orgId}/users/{uid}
 
 Required fields:
+
 - `uid: string` (must equal Firebase Auth UID and doc ID)
 - `fullName: string`
 - `email: string`
-- `role: 'org_admin' | 'school_admin' | 'staff' | 'viewer'`
+- `role:'superadmin' | 'org_admin' | 'school_admin' | 'staff' | 'viewer'`
 - `orgId: string`
 - `enabledModules: string[]`
 - `isActive: boolean`
@@ -65,12 +72,14 @@ Required fields:
 - `updatedAt: Timestamp`
 
 Optional fields:
+
 - `schoolIds: string[]`
 - `staffId: string`
 
 ### 2.4 organisations/{orgId}/staff/{staffId}
 
 Required fields:
+
 - `fullName: string`
 - `schoolIds: string[]`
 - `employmentRole: string`
@@ -79,6 +88,7 @@ Required fields:
 - `updatedAt: Timestamp`
 
 Optional fields:
+
 - `email: string`
 - `jobTitle: string`
 - `startDate: Timestamp`
@@ -87,14 +97,16 @@ Optional fields:
 ### 2.5 organisations/{orgId}/aggregates/orgCompliance
 
 Required fields:
+
 - `compliantCount: number`
 - `nonCompliantCount: number`
 - `expiringSoonCount: number`
 - `lastCalculatedAt: Timestamp`
 
-### 2.6 organisations/{orgId}/aggregates/school_{schoolId}
+### 2.6 organisations/{orgId}/aggregates/school\_{schoolId}
 
 Required fields:
+
 - `compliantCount: number`
 - `nonCompliantCount: number`
 - `expiringSoonCount: number`
@@ -103,11 +115,13 @@ Required fields:
 ### 2.7 organisations/{orgId}/moduleHealth/{moduleId}
 
 Required fields:
+
 - `state: 'green' | 'amber' | 'red' | 'grey'`
 - `openRiskCount: number`
 - `lastCalculatedAt: Timestamp`
 
 Optional fields:
+
 - `summary: string`
 
 ---
@@ -117,6 +131,7 @@ Optional fields:
 ### 3.1 organisations/{orgId}/modules/trainingTrack/trainingTypes/{trainingTypeId}
 
 Required fields:
+
 - `name: string`
 - `expires: boolean`
 - `required: boolean`
@@ -124,6 +139,7 @@ Required fields:
 - `updatedAt: Timestamp`
 
 Optional fields:
+
 - `code: string`
 - `defaultValidityDays: number`
 - `requiredForRoles: string[]`
@@ -131,6 +147,7 @@ Optional fields:
 ### 3.2 organisations/{orgId}/modules/trainingTrack/trainingRecords/{recordId}
 
 Required fields:
+
 - `staffId: string`
 - `schoolId: string`
 - `trainingTypeId: string`
@@ -140,6 +157,7 @@ Required fields:
 - `status: 'valid' | 'expiring' | 'expired'`
 
 Optional fields:
+
 - `issuedAt: Timestamp`
 - `expiresAt: Timestamp`
 - `provider: string`
@@ -150,6 +168,7 @@ Optional fields:
 ### 3.3 organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
 
 Required fields:
+
 - `actorUserId: string`
 - `action: 'create' | 'update' | 'delete'`
 - `entityType: 'staff' | 'trainingRecord' | 'trainingType'`
@@ -158,10 +177,12 @@ Required fields:
 - `createdAt: Timestamp`
 
 Optional fields:
+
 - `before: map`
 - `after: map`
 
 Rule contract:
+
 - Immutable: create-only, no update/delete.
 
 ---
@@ -169,12 +190,14 @@ Rule contract:
 ## 4. Deterministic ID Conventions
 
 Use deterministic IDs where contractually required:
+
 - `users/{uid}`
 - `aggregates/orgCompliance`
 - `aggregates/school_{schoolId}`
 - `moduleHealth/{moduleId}`
 
 Use generated IDs:
+
 - `schools/{schoolId}`
 - `staff/{staffId}`
 - `modules/trainingTrack/trainingTypes/{trainingTypeId}`
@@ -193,6 +216,7 @@ Composite indexes (defined in `firestore.indexes.json`):
 4. `modules/trainingTrack/trainingRecords`: `staffId ASC, trainingTypeId ASC, expiresAt DESC`
 
 Single-field reliance:
+
 - `staff.schoolIds` supports `array-contains` query.
 
 ---
@@ -214,6 +238,7 @@ Single-field reliance:
 ## 7. Change Control
 
 Any schema change requires:
+
 1. Update to `docs/Architecture.md`
 2. Update to `docs/SecurityContract.md` (if auth/scope impacted)
 3. Update to `docs/ComplianceDecisionTable.md` (if logic impacted)
