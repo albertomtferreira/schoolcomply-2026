@@ -1,180 +1,221 @@
-# SchoolTrack - Implementation Plan
+# SchoolTrack Implementation Plan (Restart v1)
 
-Canonical compliance logic reference: `docs/ComplianceDecisionTable.md`.
-Canonical migration runbook reference: `docs/MigrationExecutionChecklist.md`.
+Purpose: execute a clean rebuild after the reset decision.
+Status: active plan.
+Last updated: 2026-02-15.
 
-## Phase 0 - Strategic Foundation (Completed)
-
-Status:
-- Core contracts established.
-- SchoolTrack brand and UK-first strategy aligned.
-
----
-
-## Phase 1 - Platform Shell + TrainingTrack (Current Build Phase)
-
-### Scope
-
-Deliver SchoolTrack core shell and TrainingTrack as the first production module.
-
-### Core Platform Deliverables
-
-- Persistent shell (sidebar + top bar)
-- Org and school scope controls
-- Module navbar driven by user entitlements
-- Module route mount (`/app/{moduleId}`)
-- Shared entities (organisation, school, user, staff)
-- Module health summaries (`moduleHealth/{moduleId}`)
-
-### TrainingTrack Deliverables
-
-- Training types
-- Training records with expiry logic
-- Training compliance dashboards
-- Immutable module audit logs
-- Aggregate updates and freshness surfacing
-
-### UX Deliverables
-
-- Sidebar module indicators using traffic-light states (green/amber/red/grey)
-- Risk-priority ordering
-- Drill-down and reason codes
-
-### Success Criteria
-
-- Core shell remains stable while module content changes.
-- User sees only entitled modules in navbar.
-- Module indicator gives at-a-glance status per module.
-- TrainingTrack rules and dashboards work end-to-end.
-
-### Phase 1 Execution Backlog
-
-Tracking legend:
-- `[x]` Completed
-- `[ ]` Not started
-
-Progress snapshot (as of 2026-02-15):
-- Total stories: `24`
-- Completed: `24`
-- In progress: `0`
-- Remaining: `0`
-
-#### Epic P - Public Entry and Authentication
-
-- [x] `US-001`: Public landing page at `/` with platform value proposition and CTAs
-- [x] `US-002`: Sign-in page at `/sign-in` backed by Firebase Auth email/password
-- [x] `US-003`: Sign-up page at `/sign-up` backed by Firebase Auth account creation
-- [x] `US-004`: Protected route gate for `/app/*` with unauthenticated redirect
-- [x] `US-005`: Post-auth redirect flow with `next` param support
-- [x] `US-006`: Auth loading/error UX states for sign-in and sign-up
-
-#### Epic A - Platform Shell Foundation
-
-- [x] `US-101`: Persistent shell layout (sidebar + top bar) across `/app/*`
-- [x] `US-102`: Org/school scope controls and scoped query context switching
-- [x] `US-103`: Entitlement-driven module navbar from `users.enabledModules`
-- [x] `US-104`: Module route mounting standard at `/app/{moduleId}`
-- [x] `US-105`: Shared entities baseline (organisation, school, user, staff)
-- [x] `US-106`: Module health summary contract at `moduleHealth/{moduleId}`
-
-#### Epic B - TrainingTrack Domain
-
-- [x] `US-201`: Training types management (create/edit/deactivate)
-- [x] `US-202`: Training records + expiry/compliance logic implementation
-- [x] `US-203`: Training compliance dashboard (org/school summaries + filters)
-- [x] `US-204`: Immutable TrainingTrack audit log events
-- [x] `US-205`: Aggregate refresh + freshness timestamp surfacing
-
-#### Epic C - UX Indicators and Explainability
-
-- [x] `US-301`: Sidebar traffic-light indicators (green/amber/red/grey)
-- [x] `US-302`: Risk-priority ordering (red > amber > green > grey)
-- [x] `US-303`: Drill-down views with reason codes per non-green state
-
-#### Epic D - Security and Quality Gates
-
-- [x] `US-401`: Enforce module entitlement in rules and UI routing paths
-- [x] `US-402`: Scope isolation tests (org/school boundary leakage prevention)
-- [x] `US-403`: Seeded module health state verification for indicators
-- [x] `US-404`: Compliance explanation traceability to rule outputs
-
-### Suggested Sprint Sequence (Phase 1)
-
-1. Sprint 1: `US-001`, `US-002`, `US-003`, `US-004`, `US-005`, `US-006`
-2. Sprint 2: `US-101`, `US-104`, `US-105`, `US-102`
-3. Sprint 3: `US-103`, `US-106`, `US-401`, `US-402`
-4. Sprint 4: `US-201`, `US-202`, `US-204`
-5. Sprint 5: `US-203`, `US-205`, `US-301`, `US-302`, `US-303`, `US-403`, `US-404`, full regression and pilot readiness
-
-### Definition of Done (Phase 1)
-
-- All Phase 1 success criteria above are met.
-- Security rules tests pass (`npm run firebase:rules:test`).
-- Scope switching does not leak cross-org/school data.
-- Non-entitled module access is denied in UI and rules.
-- Module indicator states are correct for seeded data.
-- Compliance explanations remain traceable end-to-end.
+Canonical references:
+- `docs/Architecture.md`
+- `docs/DataContract.md`
+- `docs/SecurityContract.md`
+- `docs/UXTruthContract.md`
 
 ---
 
-## Phase 2 - Additional Modules (Planned)
+## 1. Reset Outcome
 
-Candidate modules:
-- `statutoryTrack`
-- `clubTrack`
-- `coshhTrack`
-
-Entry requirement per module:
-- module data contract defined under `modules/{moduleId}`
-- module RBAC/entitlement rules tested
-- module health summary integrated into sidebar indicators
+- Previous implementation is treated as learning material, not delivery baseline.
+- New build starts from the restart contracts listed above.
+- Any prior "completed" status is non-authoritative.
+- Delivery starts from a clean Next.js installation.
+- Existing app code is not copied into the new codebase.
 
 ---
 
-## Phase 3 - Stabilisation and Scale
+## 2. Phase Plan
 
-Objectives:
-- optimize query/index efficiency per module
-- improve operational alerts and exports
-- harden reconciliation and observability
+### Phase 0 - Greenfield Bootstrap (Current)
+
+Objective:
+- Stand up a clean, production-ready foundation from zero.
+
+Engineering tasks:
+- [ ] initialize a new Next.js project (`create-next-app`) for SchoolTrack
+- [ ] define base folder layout (`src/app`, `src/components`, `src/lib`, `src/modules`, `src/types`)
+- [ ] configure TypeScript strict mode and shared path aliases
+- [ ] configure ESLint and Prettier with project scripts
+- [ ] add baseline UI stack dependencies (Tailwind, component primitives)
+- [ ] add Firebase client and admin SDK dependencies
+- [ ] add env parsing/validation layer for server and client vars
+
+Firebase and runtime tasks:
+- [ ] configure `.firebaserc` aliases (`dev`, `staging`, `prod`)
+- [ ] configure `firebase.json` emulator mappings
+- [ ] wire local emulator startup scripts
+- [ ] create baseline `firestore.rules` and `firestore.indexes.json` placeholders
+- [ ] implement minimal auth + Firestore bootstrap modules in `src/lib/firebase/*`
+
+Quality and ops tasks:
+- [ ] create CI scripts for lint, typecheck, test placeholders
+- [ ] add pre-commit or local quality command (single command for lint + typecheck)
+- [ ] verify clean install from empty cache and fresh clone
+- [ ] document bootstrap in `docs/PlatformBootstrap.md`
+
+Exit gate:
+- project boots locally with `npm run dev`
+- emulators start and are reachable
+- lint and typecheck pass on clean clone
+- env validation fails fast when required keys are missing
+
+### Phase 1 - Re-baseline Contracts
+
+Objective:
+- Convert architecture contracts into enforceable schema and access control.
+
+Data contract tasks:
+- [ ] define concrete TypeScript models for `users`, `orgs`, `members`, `schools`, `staff`
+- [ ] define runtime validators for write payloads
+- [ ] freeze deterministic ID rules (`users/{uid}`, `members/{uid}`, `moduleHealth/{moduleId}`)
+- [ ] define module namespace conventions under `orgs/{orgId}/modules/{moduleId}`
+
+Security contract tasks:
+- [ ] implement Firestore rules for all required root and org paths
+- [ ] implement role + scope + entitlement checks using membership docs
+- [ ] enforce module access intersection rule (`orgs.subscribedModules` + `members.enabledModules`)
+- [ ] enforce create-only rule for module audit logs
+- [ ] enforce no client writes to aggregate-derived docs unless explicitly allowed
+
+Test harness tasks:
+- [ ] rebuild `firestore.rules` tests for new path topology
+- [ ] add positive tests for each role in own org/scope
+- [ ] add deny tests for cross-org reads/writes
+- [ ] add deny tests for module entitlement mismatch
+- [ ] add deny tests for out-of-scope school access
+
+Routing scaffolding tasks:
+- [ ] scaffold app shell route groups for `/app/*`
+- [ ] scaffold module-aware route pattern `/app/{moduleId}/{child}`
+- [ ] scaffold not-authorized and not-found states
+
+Documentation tasks:
+- [ ] confirm `docs/Architecture.md`, `docs/DataContract.md`, `docs/SecurityContract.md` match implementation choices
+- [ ] add decisions log in this file for any contract clarifications
+
+Exit gate:
+- rules test suite green in emulator
+- core shell route tree compiles and renders
+- schema, rules, and route conventions are consistent with restart docs
+
+### Phase 2 - Platform Shell
+
+Objective:
+- Deliver the complete role-aware shell and navigation framework.
+
+Top bar tasks:
+- [ ] implement top bar layout component for authenticated app routes
+- [ ] add org selector behavior (single-org read-only, multi-org selectable)
+- [ ] add school selector constrained by membership scope
+- [ ] add global user quick actions entry point
+
+Sidebar tasks:
+- [ ] implement sidebar layout and section ordering (user menu, role-aware management, modules)
+- [ ] implement user menu (identity, profile/settings, sign out)
+- [ ] implement management links by role (`platform_admin`, `org_admin`, `school_admin`, `staff/viewer`)
+- [ ] implement expandable module rows and active/expanded state management
+- [ ] implement TrainingTrack children (`Dashboard`, `Training Records`, `Staff`, `Training Definitions`)
+
+Entitlement and guard tasks:
+- [ ] load membership and org subscription at shell level
+- [ ] filter visible modules by intersection entitlement
+- [ ] block direct URL navigation to unauthorized module/child routes
+- [ ] redirect unauthorized routes to nearest allowed destination
+
+State and UX tasks:
+- [ ] persist open sidebar groups and last selected child route (session/local)
+- [ ] render loading/skeleton states for shell data
+- [ ] render empty states when no modules are available
+- [ ] ensure keyboard navigation and accessible labels for menu and submenu controls
+
+Testing tasks:
+- [ ] add component/integration tests for role-based menu visibility
+- [ ] add tests for module entitlement filtering and route guards
+- [ ] add tests for module submenu expansion and child route rendering
+- [ ] run manual UX checklist from `docs/UXTruthContract.md`
+
+Exit gate:
+- role and entitlement visibility verified for all roles
+- navigation contract from `docs/UXTruthContract.md` passes QA checklist
+- unauthorized direct routes are blocked and redirected correctly
+
+### Phase 3 - TrainingTrack Rebuild
+
+Objective:
+- Implement TrainingTrack end-to-end on the new data and security contracts.
+
+Domain model tasks:
+- [ ] define TrainingTrack types and validators (`trainingDefinitions`, `trainingRecords`, `auditLogs`)
+- [ ] map status derivation rules to `docs/ComplianceDecisionTable.md`
+- [ ] define query contracts and indexes for school/staff dashboards
+
+Feature tasks:
+- [ ] build Training Definitions CRUD (create, edit, activate/deactivate)
+- [ ] build Training Records CRUD with expiry logic
+- [ ] build Staff module view with assigned requirements and status summary
+- [ ] build TrainingTrack Dashboard with compliance buckets and filters
+- [ ] build immutable module audit log creation on all write actions
+
+Computation tasks:
+- [ ] implement status calculation (`valid`, `expiring`, `expired`) on trusted write path
+- [ ] implement required training applicability by role
+- [ ] implement missing-required detection for compliance rollups
+- [ ] implement `moduleHealth/trainingTrack` updater contract
+
+Security and data integrity tasks:
+- [ ] enforce module path ownership in code and rules
+- [ ] validate foreign keys (`staffId`, `schoolId`, `trainingDefinitionId`) within org scope
+- [ ] ensure client cannot write derived compliance fields directly
+
+Testing tasks:
+- [ ] add unit tests for status and compliance decision logic
+- [ ] add integration tests for Training Definitions and Records flows
+- [ ] add rules tests for TrainingTrack path authorization
+- [ ] add regression tests for audit log immutability
+- [ ] add seeded-data test cases for dashboard filters and counts
+
+Exit gate:
+- end-to-end flow works under new schema and rules
+- compliance outputs match `docs/ComplianceDecisionTable.md` for seeded scenarios
+- TrainingTrack navigation and pages align with `docs/UXTruthContract.md`
+
+### Phase 4 - Stabilize
+
+Objective:
+- Hardening, observability, and pilot readiness.
+
+Quality hardening tasks:
+- [ ] finalize regression suite across auth, shell, and TrainingTrack
+- [ ] raise minimum coverage targets for critical modules
+- [ ] add failure-mode tests (missing data, stale aggregates, permission failures)
+
+Aggregate and health tasks:
+- [ ] verify aggregate update behavior under normal write flows
+- [ ] verify module health transitions (`green`, `amber`, `red`, `grey`)
+- [ ] verify timestamps/freshness display and stale-state behavior
+- [ ] add reconciliation routine spec and backlog item if not implemented in phase
+
+Performance and reliability tasks:
+- [ ] verify query/index performance on seeded medium dataset
+- [ ] remove duplicate or unbounded queries
+- [ ] add structured logging for auth, entitlement, and write failures
+- [ ] define basic error budget and alert thresholds for pilot period
+
+Operational readiness tasks:
+- [ ] build seed scripts for demo and QA orgs
+- [ ] define release checklist (`dev -> staging -> prod`)
+- [ ] document rollback playbook for schema/rules/deploy issues
+- [ ] prepare pilot runbook and support triage flow
+- [ ] finalize open risks and deferred backlog list
+
+Exit gate:
+- no critical or high-severity defects open
+- pilot checklist approved
+- release and rollback runbooks are available and reviewed
 
 ---
 
-## Delivery Sequencing (Execution Order)
+## 3. Work Rules During Restart
 
-1. **Forge + Lumen:** implement core shell + module routing framework.
-2. **Forge + Sentinel:** enforce module entitlement and security path boundaries.
-3. **Sentinel + Forge:** complete TrainingTrack domain implementation.
-4. **Lumen:** finalize module indicator UI and accessibility states.
-5. **All:** regression + rules tests + pilot readiness checks.
-
----
-
-## Test and Quality Gates
-
-Required gates before each release increment:
-
-- Security rules tests pass (`npm run firebase:rules:test`)
-- Scope switching does not leak cross-org/school data
-- Non-entitled module access is denied in UI and rules
-- Module health indicator state is correct for seeded test data
-- Compliance result explanations remain traceable
-
----
-
-## Risks and Mitigations
-
-| Risk | Mitigation |
-| --- | --- |
-| Module sprawl too early | Keep production scope to core + TrainingTrack first |
-| Entitlement drift between UI and rules | Source module access from `users.enabledModules` and test both paths |
-| Cross-module coupling | Enforce `modules/{moduleId}` ownership boundary |
-| Confusing status signals | Use fixed traffic-light semantics and explicit labels |
-
----
-
-## Strategic Reminder
-
-Build one strong platform shell.
-Ship one excellent first module.
-Scale modules only through the same contract.
+1. No new module beyond TrainingTrack until Phase 3 exit gate passes.
+2. Security rules and UI entitlement must ship together.
+3. Every feature must reference restart contracts, not legacy docs.
+4. If a behavior is needed, reimplement it in the greenfield app rather than reusing old code.

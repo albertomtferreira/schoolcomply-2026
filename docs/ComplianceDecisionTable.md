@@ -2,7 +2,7 @@
 
 Purpose: single source of truth for compliance outcomes used by product, engineering, and QA.
 Contract owners: Forge (architecture) and Sentinel (compliance integrity).
-Status: Phase 0.1 baseline for implementation.
+Status: carried forward as canonical rule logic for restart implementation.
 
 ---
 
@@ -135,8 +135,8 @@ Update impacted aggregates when any of the below changes:
 
 Impacted docs:
 
-- `organisations/{orgId}/aggregates/orgCompliance`
-- `organisations/{orgId}/aggregates/school_{schoolId}` for affected schools only
+- `orgs/{orgId}/aggregates/orgCompliance`
+- `orgs/{orgId}/aggregates/school_{schoolId}` for affected schools only
 
 ---
 

@@ -1,169 +1,59 @@
-# SchoolTrack - Brand Guidelines
+# SchoolTrack Product Guidelines (Restart v1)
 
-## 1. Brand Positioning
+Purpose: keep brand and product decisions coherent during rebuild.
+Status: active guidance.
+Last updated: 2026-02-15.
 
-**Core Brand:** **SchoolTrack**
-
-**Category:** UK School Operations and Compliance Platform
-
-**Audience:**
-
-- Primary schools
-- Multi-Academy Trusts (MATs)
-- School Business Managers
-- Finance Managers
-- Executive Headteachers
-
-**Core Promise:**
-
-> Reliability. Simplicity. Visual clarity.
-
-This platform exists to reduce compliance anxiety and improve operational control in schools.
+Canonical companions:
+- `docs/Architecture.md`
+- `docs/UXTruthContract.md`
+- `docs/Implementation.md`
 
 ---
 
-## 2. Mission and Vision
+## 1. Product Direction
 
-### Mission
-
-Give UK schools a simple, visual, real-time understanding of operational and compliance status before issues become risks.
-
-### Vision
-
-Become the lightweight but powerful operating layer for schools across the UK, starting with training and statutory monitoring and expanding through focused modules.
+- Build a dependable operations and compliance platform for schools.
+- Start with one strong module (`TrainingTrack`) on a strong platform shell.
+- Favor clarity and reliability over speed and surface area.
 
 ---
 
-## 3. Core Philosophy
+## 2. Data and Access Principles
 
-Three foundational values:
-
-- **Reliability**: data must be accurate and trusted.
-- **Simplicity**: no corporate bloat, no unnecessary complexity.
-- **Visual**: clear dashboards with Red/Amber/Green logic.
-
-This is not just a document storage tool.
-This is a **decision-support system for leaders**.
-
-> We do not just store files; we answer the question "Are we safe?"
+1. Firestore roots are `users` and `orgs`.
+2. Org business data lives only under `orgs/{orgId}`.
+3. Role and scope are evaluated in org membership context.
+4. Module access requires:
+   - org subscription
+   - member enablement
 
 ---
 
-## 4. Brand Personality
+## 3. UX Principles
 
-| Trait | Expression |
-| --- | --- |
-| Calm | Reduces stress around compliance |
-| Structured | Clear dashboards and clean UI |
-| Direct | No fluff language |
-| Professional | Designed for leadership teams |
-| Practical | Built by someone inside schools |
-
-Tone of voice:
-
-- Clear
-- Concise
-- Confident
-- Non-technical for end users
+1. Keep top bar persistent.
+2. Use sidebar as primary navigation surface.
+3. Sidebar starts with user menu, then management, then modules.
+4. Module rows are expandable and own their child navigation.
+5. Main pane always reflects selected sidebar child route.
 
 ---
 
-## 5. Positioning Statement
+## 4. TrainingTrack Information Architecture
 
-Unlike generic compliance trackers, SchoolTrack is:
+Required submenu:
+- `Dashboard`
+- `Training Records`
+- `Staff`
+- `Training Definitions`
 
-- Built specifically for schools
-- Designed around real operational workflows
-- Structured for federations and multi-school environments
-- Built by a Finance and Compliance lead inside a school federation
-
-This insider credibility is a core differentiator.
-
----
-
-## 6. Visual Direction
-
-### Design Principles
-
-- Clean UI inspired by modern SaaS dashboards
-- High whitespace
-- Strong typography hierarchy
-- Minimal color palette
-
-### Suggested Palette
-
-- Primary: Deep Indigo / Navy
-- Success: Emerald Green
-- Warning: Amber
-- Critical: Soft Red
-- Background: Light Grey / Off White
-
-### UX Standards
-
-- One expired required training = non-compliant
-- Missing required training record = non-compliant
-- No hidden alerts
-- No buried information
-- Data freshness shown clearly (for example `lastCalculatedAt`)
+No additional items without explicit contract update.
 
 ---
 
-## 7. Product Architecture Vision
+## 5. Delivery Discipline
 
-Module structure:
-
-- Core platform: `SchoolTrack`
-- Planned modules: `TrainingTrack`, `ClubTrack`, `StatutoryTrack`, `COSHHTrack`
-
-### Phase 1 (Core SchoolTrack)
-
-- Staff training compliance
-- Expiry monitoring
-- Federation-level dashboard
-- School-level breakdown
-- Multi-school staff visibility
-
-### Phase 2 (Priority Modules)
-
-- Statutory inspections (`StatutoryTrack`)
-- Fire safety monitoring
-- Risk assessment tracking
-- Document storage and certification upload
-
-### Phase 3 (Ecosystem Expansion)
-
-- Full compliance suite
-- Predictive alerts
-- Automated reporting exports
-- Multi-tenant subscription tiers
-
----
-
-## 8. Monetisation Philosophy
-
-Current decision: monetisation planning is deferred until pilot validation is complete.
-
-### Now
-
-- Pilot internally
-- Validate value and usability
-- Build trust through reliable outcomes
-
-### Later
-
-- Introduce pricing after clear evidence of adoption and operational value
-- Keep a lean pricing model and simple commercial structure
-
-Focus:
-Structure first. Revenue second. Scalability after validation.
-
----
-
-## 9. Long-Term Brand Goal
-
-Become the quiet infrastructure layer that school leaders rely on daily.
-
-Not flashy.
-Not noisy.
-Just indispensable.
-
+1. No feature work outside restart contracts.
+2. No "done" claims without passing rule and route acceptance gates.
+3. Document changes first, then implement.

@@ -1,85 +1,99 @@
-# Firestore Data Contract (v2)
+# Firestore Data Contract (Restart v1)
 
-Purpose: frozen schema and index contract for SchoolTrack core + module architecture.
-
-Status: approved baseline for SchoolTrack shell and TrainingTrack module.
+Purpose: schema contract for rebuild using top-level `users` and `orgs`.
+Status: approved baseline for restart implementation.
 Last updated: 2026-02-15.
 
 Canonical companions:
-
 - `docs/Architecture.md`
+- `docs/SecurityContract.md`
 - `docs/ComplianceDecisionTable.md`
-- `firestore.indexes.json`
 
 ---
 
-## 1. Namespace Contract
+## 1. Root Collections
 
-All documents are tenant-scoped under: `organisations/{orgId}/...`.
+Top-level roots:
+- `users/{uid}`
+- `orgs/{orgId}`
 
-Data ownership split:
-
-- **Core shared entities:** org, school, user, staff, shared aggregates, module health.
-- **Module-owned entities:** all domain objects inside `modules/{moduleId}/...`.
-
-Module IDs:
-
-- `trainingTrack`
-- `statutoryTrack`
-- `clubTrack`
-- `coshhTrack`
+All tenant business data lives under `orgs/{orgId}`.
 
 ---
 
-## 2. Shared Core Collections
+## 2. User Root Contract
 
-### 2.1 organisations/{orgId}
+Path: `users/{uid}`
 
 Required fields:
-
-- `name: string`
-- `slug: string`
-- `status: 'active' | 'paused'`
+- `uid: string` (doc id must match)
+- `email: string`
+- `fullName: string`
+- `isActive: boolean`
+- `defaultOrgId: string | null`
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`
 
-### 2.2 organisations/{orgId}/schools/{schoolId}
+Optional fields:
+- `defaultRole: 'platform_admin' | 'org_admin' | 'school_admin' | 'staff' | 'viewer'`
+
+Rule:
+- `users` does not store org business data.
+
+---
+
+## 3. Org Root Contract
+
+Path: `orgs/{orgId}`
 
 Required fields:
+- `name: string`
+- `slug: string`
+- `status: 'active' | 'paused'`
+- `subscribedModules: string[]`
+- `createdAt: Timestamp`
+- `updatedAt: Timestamp`
 
+---
+
+## 4. Org Membership Contract
+
+Path: `orgs/{orgId}/members/{uid}`
+
+Required fields:
+- `uid: string` (must match doc id)
+- `role: 'org_admin' | 'school_admin' | 'staff' | 'viewer'`
+- `isActive: boolean`
+- `enabledModules: string[]`
+- `createdAt: Timestamp`
+- `updatedAt: Timestamp`
+
+Optional fields:
+- `schoolIds: string[]`
+- `staffId: string`
+
+Entitlement invariant:
+- `enabledModules` must be a subset of `orgs/{orgId}.subscribedModules`.
+
+---
+
+## 5. Shared Org Collections
+
+### 5.1 `orgs/{orgId}/schools/{schoolId}`
+
+Required:
 - `name: string`
 - `status: 'active' | 'archived'`
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`
 
-Optional fields:
-
+Optional:
 - `code: string`
 - `address: string`
 
-### 2.3 organisations/{orgId}/users/{uid}
+### 5.2 `orgs/{orgId}/staff/{staffId}`
 
-Required fields:
-
-- `uid: string` (must equal Firebase Auth UID and doc ID)
-- `fullName: string`
-- `email: string`
-- `role:'superadmin' | 'org_admin' | 'school_admin' | 'staff' | 'viewer'`
-- `orgId: string`
-- `enabledModules: string[]`
-- `isActive: boolean`
-- `createdAt: Timestamp`
-- `updatedAt: Timestamp`
-
-Optional fields:
-
-- `schoolIds: string[]`
-- `staffId: string`
-
-### 2.4 organisations/{orgId}/staff/{staffId}
-
-Required fields:
-
+Required:
 - `fullName: string`
 - `schoolIds: string[]`
 - `employmentRole: string`
@@ -87,162 +101,100 @@ Required fields:
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`
 
-Optional fields:
-
+Optional:
 - `email: string`
 - `jobTitle: string`
 - `startDate: Timestamp`
 - `endDate: Timestamp`
 
-### 2.5 organisations/{orgId}/aggregates/orgCompliance
+### 5.3 `orgs/{orgId}/moduleHealth/{moduleId}`
 
-Required fields:
-
-- `compliantCount: number`
-- `nonCompliantCount: number`
-- `expiringSoonCount: number`
-- `lastCalculatedAt: Timestamp`
-
-### 2.6 organisations/{orgId}/aggregates/school\_{schoolId}
-
-Required fields:
-
-- `compliantCount: number`
-- `nonCompliantCount: number`
-- `expiringSoonCount: number`
-- `lastCalculatedAt: Timestamp`
-
-### 2.7 organisations/{orgId}/moduleHealth/{moduleId}
-
-Required fields:
-
+Required:
 - `state: 'green' | 'amber' | 'red' | 'grey'`
 - `openRiskCount: number`
 - `lastCalculatedAt: Timestamp`
 
-Optional fields:
+### 5.4 `orgs/{orgId}/aggregates/{aggregateId}`
 
-- `summary: string`
+Required:
+- `lastCalculatedAt: Timestamp`
+
+Module-specific aggregate fields are defined by each module contract.
 
 ---
 
-## 3. Module Collections (TrainingTrack v1)
+## 6. TrainingTrack Module Contract
 
-### 3.1 organisations/{orgId}/modules/trainingTrack/trainingTypes/{trainingTypeId}
+Paths:
+- `orgs/{orgId}/modules/trainingTrack/trainingDefinitions/{definitionId}`
+- `orgs/{orgId}/modules/trainingTrack/trainingRecords/{recordId}`
+- `orgs/{orgId}/modules/trainingTrack/auditLogs/{logId}`
 
-Required fields:
+### 6.1 Training Definitions
 
+Required:
 - `name: string`
-- `expires: boolean`
 - `required: boolean`
+- `expires: boolean`
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`
 
-Optional fields:
-
-- `code: string`
+Optional:
 - `defaultValidityDays: number`
 - `requiredForRoles: string[]`
 
-### 3.2 organisations/{orgId}/modules/trainingTrack/trainingRecords/{recordId}
+### 6.2 Training Records
 
-Required fields:
-
+Required:
 - `staffId: string`
 - `schoolId: string`
-- `trainingTypeId: string`
+- `trainingDefinitionId: string`
+- `status: 'valid' | 'expiring' | 'expired'`
 - `createdBy: string`
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`
-- `status: 'valid' | 'expiring' | 'expired'`
 
-Optional fields:
-
+Optional:
 - `issuedAt: Timestamp`
 - `expiresAt: Timestamp`
 - `provider: string`
 - `certificateUrl: string`
 - `notes: string`
-- `daysToExpiry: number`
 
-### 3.3 organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
+### 6.3 Audit Logs
 
-Required fields:
-
+Required:
+- `moduleId: 'trainingTrack'`
 - `actorUserId: string`
 - `action: 'create' | 'update' | 'delete'`
-- `entityType: 'staff' | 'trainingRecord' | 'trainingType'`
+- `entityType: string`
 - `entityId: string`
-- `moduleId: 'trainingTrack'`
 - `createdAt: Timestamp`
 
-Optional fields:
-
-- `before: map`
-- `after: map`
-
-Rule contract:
-
-- Immutable: create-only, no update/delete.
+Rule:
+- create-only (immutable)
 
 ---
 
-## 4. Deterministic ID Conventions
+## 7. ID Conventions
 
-Use deterministic IDs where contractually required:
-
+Deterministic IDs:
 - `users/{uid}`
-- `aggregates/orgCompliance`
-- `aggregates/school_{schoolId}`
-- `moduleHealth/{moduleId}`
+- `orgs/{orgId}/members/{uid}`
+- `orgs/{orgId}/moduleHealth/{moduleId}`
+- `orgs/{orgId}/aggregates/orgCompliance`
 
-Use generated IDs:
-
+Generated IDs:
 - `schools/{schoolId}`
 - `staff/{staffId}`
-- `modules/trainingTrack/trainingTypes/{trainingTypeId}`
-- `modules/trainingTrack/trainingRecords/{recordId}`
-- `modules/trainingTrack/auditLogs/{logId}`
+- module entity IDs under `modules/{moduleId}`
 
 ---
 
-## 5. Index Plan (TrainingTrack Baseline)
-
-Composite indexes (defined in `firestore.indexes.json`):
-
-1. `modules/trainingTrack/trainingRecords`: `schoolId ASC, status ASC`
-2. `modules/trainingTrack/trainingRecords`: `staffId ASC, trainingTypeId ASC`
-3. `modules/trainingTrack/trainingRecords`: `schoolId ASC, expiresAt ASC`
-4. `modules/trainingTrack/trainingRecords`: `staffId ASC, trainingTypeId ASC, expiresAt DESC`
-
-Single-field reliance:
-
-- `staff.schoolIds` supports `array-contains` query.
-
----
-
-## 6. Validation Rules (Data Integrity)
-
-- `orgId` in user scope must match path `orgId`.
-- `users.uid` must equal document ID.
-- `users.orgId` must equal path `orgId`.
-- Access to `modules/{moduleId}` requires `moduleId in users.enabledModules`.
-- Module collections may not mutate shared core entities.
-- `trainingRecords.schoolId` must reference a school in same tenant.
-- `trainingRecords.staffId` must reference staff in same tenant.
-- `trainingRecords.trainingTypeId` must reference a module training type in same tenant.
-- `status` and `daysToExpiry` are derived on write and never trusted from client input.
-
----
-
-## 7. Change Control
+## 8. Change Control
 
 Any schema change requires:
-
-1. Update to `docs/Architecture.md`
-2. Update to `docs/SecurityContract.md` (if auth/scope impacted)
-3. Update to `docs/ComplianceDecisionTable.md` (if logic impacted)
-4. Update to `firestore.indexes.json` (if query impacted)
-5. Migration note in `docs/Implementation.md`
-
-This file is the v2 freeze point for SchoolTrack core + TrainingTrack module implementation.
+1. Update `docs/Architecture.md`
+2. Update `docs/SecurityContract.md` if authorization changes
+3. Update module contract docs
+4. Add note in `docs/Implementation.md`

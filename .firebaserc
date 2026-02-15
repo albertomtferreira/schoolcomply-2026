@@ -1,8 +1,0 @@
-{
-  "projects": {
-    "dev": "schooltrack-dev",
-    "staging": "schooltrack-staging",
-    "prod": "schooltrack-prod"
-  },
-  "targets": {}
-}

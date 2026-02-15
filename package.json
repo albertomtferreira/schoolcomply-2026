@@ -1,38 +1,19 @@
 {
-  "name": "schooltrack-2026",
+  "name": "schoolcomply-2026",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test:rules": "vitest run firestore.rules.test.ts",
-    "smoke:trainingtrack:dualwrite": "vitest run scripts/smoke/trainingTrackDualWrite.smoke.test.ts",
-    "migrate:trainingtrack:backfill:dry": "node scripts/migrations/2026-02-trainingtrack-modules/backfill.mjs --dry-run",
-    "migrate:trainingtrack:backfill": "node scripts/migrations/2026-02-trainingtrack-modules/backfill.mjs",
-    "migrate:trainingtrack:seed:staging": "node scripts/migrations/2026-02-trainingtrack-modules/seedStagingOrg.mjs",
-    "migrate:trainingtrack:cutover:report": "node scripts/migrations/2026-02-trainingtrack-modules/readCutoverReport.mjs",
-    "migrate:trainingtrack:retire-legacy:dry": "node scripts/migrations/2026-02-trainingtrack-modules/retireLegacy.mjs --dry-run --archive-only",
-    "migrate:trainingtrack:retire-legacy": "node scripts/migrations/2026-02-trainingtrack-modules/retireLegacy.mjs --force",
-    "firebase:login": "firebase login",
-    "firebase:emulators": "firebase emulators:start --project schooltrack-dev",
-    "firebase:rules:test": "firebase emulators:exec --project schooltrack-dev \"npm run test:rules\""
+    "lint": "eslint"
   },
   "dependencies": {
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "firebase": "^12.9.0",
-    "firebase-admin": "^13.6.1",
-    "lucide-react": "^0.564.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "tailwind-merge": "^3.4.0",
-    "zod": "^4.3.6"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "^5.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -40,9 +21,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "firebase-tools": "^15.6.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^4.0.18"
+    "typescript": "^5"
   }
 }

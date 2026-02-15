@@ -1,8 +1,8 @@
-# Aggregate Contract (v2)
+# Aggregate Contract (Restart v1)
 
-Purpose: define deterministic aggregate and module-health update logic with reconciliation for SchoolTrack.
+Purpose: define deterministic aggregate and module-health update logic for restart architecture.
 
-Status: baseline for SchoolTrack shell + TrainingTrack module.
+Status: approved baseline for rebuild.
 Last updated: 2026-02-15.
 
 Canonical companions:
@@ -15,11 +15,11 @@ Canonical companions:
 ## 1. Aggregate Documents
 
 Shared aggregate paths:
-- `organisations/{orgId}/aggregates/orgCompliance`
-- `organisations/{orgId}/aggregates/school_{schoolId}`
+- `orgs/{orgId}/aggregates/orgCompliance`
+- `orgs/{orgId}/aggregates/school_{schoolId}`
 
 Module health path:
-- `organisations/{orgId}/moduleHealth/{moduleId}`
+- `orgs/{orgId}/moduleHealth/{moduleId}`
 
 ### Shared aggregate required fields
 - `compliantCount: number`

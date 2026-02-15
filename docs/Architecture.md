@@ -1,308 +1,124 @@
-# SchoolTrack - Technical Architecture
+# SchoolTrack Architecture (Restart v1)
 
-> Goal: a **multi-tenant**, **role-based** platform that gives **instant operational and compliance clarity**.
-> Core model: **SchoolTrack shell + module workspaces**.
-> Rule baseline (TrainingTrack): **1 expired required training = non-compliant**.
-> Canonical rules reference: `docs/ComplianceDecisionTable.md`.
-> Canonical data contract reference: `docs/DataContract.md`.
-> Canonical security contract reference: `docs/SecurityContract.md`.
-> Canonical aggregate contract reference: `docs/AggregateContract.md`.
-> Canonical platform bootstrap reference: `docs/PlatformBootstrap.md`.
-> Canonical UX truth reference: `docs/UXTruthContract.md`.
+Purpose: define the restart architecture after pausing the previous implementation.
+Status: approved direction for rebuild from scratch.
+Last updated: 2026-02-15.
 
----
+Canonical companions:
 
-## 1. Tech Stack (Baseline)
-
-- **Frontend:** Next.js (App Router)
-- **UI:** Tailwind + shadcn/ui
-- **Language:** TypeScript
-- **Validation:** Zod
-- **Auth:** Firebase Auth
-- **DB:** Firestore
-- **Storage:** Firebase Storage
-- **Hosting:** Vercel
+- `docs/DataContract.md`
+- `docs/SecurityContract.md`
+- `docs/UXTruthContract.md`
+- `docs/Implementation.md`
 
 ---
 
-## 2. Platform Composition (Core + Modules)
+## 1. Restart Decisions
 
-SchoolTrack architecture is split into:
-
-- **Core shell**
-  - persistent sidebar
-  - persistent top bar
-  - scope controls (org + school)
-  - module discovery and module switching
-- **Module workspace**
-  - children rendered into the core shell content area
-  - domain-specific entities and workflows
-
-Module IDs (initial):
-
-- `trainingTrack`
-- `statutoryTrack`
-- `clubTrack`
-- `coshhTrack`
-
-Navigation contract:
-
-- Top navbar shows only modules user is entitled to access.
-- Sidebar can show all entitled modules plus module health indicators.
-- Module routing mount pattern: `/app/{moduleId}/...`.
+1. Stop extending the previous implementation.
+2. Keep learnings, but reset delivery to a simpler baseline.
+3. Use top-level Firestore roots:
+   - `users`
+   - `orgs`
+4. Build from a new, clean Next.js installation (greenfield).
+5. Reuse decisions and contracts only, not legacy app code.
 
 ---
 
-## 3. Tenancy Model
-
-### Tenancy Principle
-
-Every document must be scoped by **orgId** path.
-
-### Recommended Hierarchy
-
-- **Organisation (Org)** = federation or single school customer
-- **School** = entity inside org
-
-### Data Placement
-
-Shared platform entities live at org root; module entities live under module namespace.
+## 2. Firestore Topology
 
 ```txt
-organisations/{orgId}
-  schools/{schoolId}
-  users/{userId}
-  staff/{staffId}
-  aggregates/{aggregateId}
-  moduleHealth/{moduleId}
-  modules/{moduleId}/...
+users/{uid}
+orgs/{orgId}
+orgs/{orgId}/members/{uid}
+orgs/{orgId}/schools/{schoolId}
+orgs/{orgId}/staff/{staffId}
+orgs/{orgId}/modules/{moduleId}/...
+orgs/{orgId}/moduleHealth/{moduleId}
+orgs/{orgId}/aggregates/{aggregateId}
 ```
 
-### Storage Placement
+Principles:
 
-Mirror module-aware structure for security and lifecycle management:
+- `users` stores identity and global user metadata.
+- `orgs` owns business data and subscriptions.
+- Module data is always owned by `orgs/{orgId}/modules/{moduleId}`.
+- User module access is the intersection of org subscription and member grants.
+
+---
+
+## 3. Access Model
+
+Access is evaluated with:
+
+1. Authenticated user (`users/{uid}` exists and active)
+2. Org membership (`orgs/{orgId}/members/{uid}` exists and active)
+3. Role scope (`role`, optional `schoolIds`, optional `staffId`)
+4. Module entitlement:
+   - Org has module subscribed
+   - Member has module enabled
+
+---
+
+## 4. Roles
+
+Initial role set:
+
+- `platform_admin`
+- `org_admin`
+- `school_admin`
+- `staff`
+- `viewer`
+
+Notes:
+
+- Role is evaluated in org context via `orgs/{orgId}/members/{uid}`.
+- `users/{uid}` can store a convenience `defaultRole`, but org member role is authoritative.
+
+---
+
+## 5. Module Contract
+
+Every module must follow:
+
+- path: `orgs/{orgId}/modules/{moduleId}/...`
+- own collections, indexes, and audit logs
+- no direct mutation of shared identity collections (`users`, `schools`, `staff`) outside approved service layer
+
+TrainingTrack module namespace:
 
 ```txt
-storage/{orgId}/{moduleId}/{schoolId}/{entityId}/{file}
+orgs/{orgId}/modules/trainingTrack/trainingDefinitions/{definitionId}
+orgs/{orgId}/modules/trainingTrack/trainingRecords/{recordId}
+orgs/{orgId}/modules/trainingTrack/auditLogs/{logId}
 ```
 
 ---
 
-## 4. Roles + RBAC
+## 6. UI Shell Contract
 
-### Roles
+- Top bar is required and persistent in the new app.
+- Sidebar is the primary app navigation.
+- Sidebar includes:
+  - user menu section
+  - role-aware management sections (orgs, schools, modules, users)
+  - module list with collapsible submenus
 
-- **superadmin**: platform owner/operator
-- **org_admin**: federation-level admin
-- **school_admin**: admin for one or more schools
-- **staff**: can view own profile + optionally submit own evidence
-- **viewer**: read-only
+TrainingTrack menu example:
 
-### Access Scope Claims
+- `TrainingTrack`
+- `TrainingTrack > Dashboard`
+- `TrainingTrack > Training Records`
+- `TrainingTrack > Staff`
+- `TrainingTrack > Training Definitions`
 
-Store role, scope, and module entitlements:
-
-```ts
-role: 'superadmin' | 'org_admin' | 'school_admin' | 'staff' | 'viewer'
-orgId: string
-schoolIds?: string[]
-staffId?: string
-enabledModules: string[]
-```
-
-Authorization logic is always **role + orgId + scope + module entitlement**.
+Main workspace renders the selected sidebar child route.
 
 ---
 
-## 5. Shared Core Schema (v1)
+## 7. Non-Goals For Restart
 
-### 5.1 organisations/{orgId}
-
-Purpose: tenant root.
-
-Fields:
-
-- `name`
-- `slug`
-- `status: active|paused`
-- `createdAt, updatedAt`
-
-### 5.2 organisations/{orgId}/schools/{schoolId}
-
-Purpose: school entities.
-
-Fields:
-
-- `name`
-- `code` (optional)
-- `address` (optional)
-- `status: active|archived`
-- `createdAt, updatedAt`
-
-### 5.3 organisations/{orgId}/users/{uid}
-
-Purpose: app user profile + authorization scope + module access.
-
-Fields:
-
-- `uid`
-- `fullName`
-- `email`
-- `role`
-- `orgId`
-- `schoolIds: string[]` (optional)
-- `staffId` (optional)
-- `enabledModules: string[]`
-- `isActive`
-- `createdAt, updatedAt`
-
-### 5.4 organisations/{orgId}/staff/{staffId}
-
-Purpose: shared person entity used across modules.
-
-Fields:
-
-- `fullName`
-- `email` (optional)
-- `schoolIds: string[]`
-- `employmentRole`
-- `jobTitle` (optional)
-- `startDate` (optional)
-- `endDate` (optional)
-- `isActive`
-- `createdAt, updatedAt`
-
-### 5.5 organisations/{orgId}/moduleHealth/{moduleId}
-
-Purpose: lightweight status summary for sidebar module indicators.
-
-Fields:
-
-- `state: 'green' | 'amber' | 'red' | 'grey'`
-- `openRiskCount: number`
-- `lastCalculatedAt`
-- `summary` (optional)
-
-### 5.6 organisations/{orgId}/aggregates/\*
-
-Purpose: fast shared dashboards.
-
-Suggested docs:
-
-- `aggregates/orgCompliance`
-- `aggregates/school_{schoolId}`
-
----
-
-## 6. TrainingTrack Module Schema (v1)
-
-Training entities are owned by `trainingTrack`.
-
-```txt
-organisations/{orgId}/modules/trainingTrack/trainingTypes/{trainingTypeId}
-organisations/{orgId}/modules/trainingTrack/trainingRecords/{recordId}
-organisations/{orgId}/modules/trainingTrack/auditLogs/{logId}
-```
-
-### trainingTypes fields
-
-- `name`
-- `code` (optional)
-- `expires: boolean`
-- `defaultValidityDays` (optional)
-- `required: boolean`
-- `requiredForRoles: string[]` (optional)
-- `createdAt, updatedAt`
-
-### trainingRecords fields
-
-- `staffId`
-- `schoolId`
-- `trainingTypeId`
-- `issuedAt` (optional)
-- `expiresAt` (if expires=true)
-- `provider` (optional)
-- `certificateUrl` (optional)
-- `notes` (optional)
-- `createdBy`
-- `createdAt, updatedAt`
-- `status: valid|expiring|expired` (derived)
-- `daysToExpiry` (derived)
-
-### auditLogs fields
-
-- `actorUserId`
-- `action`
-- `entityType`
-- `entityId`
-- `before` (optional)
-- `after` (optional)
-- `moduleId: 'trainingTrack'`
-- `createdAt`
-
----
-
-## 7. Query Patterns
-
-### Core shell
-
-- Load user profile and `enabledModules`.
-- Load `moduleHealth/*` for entitled modules to render sidebar indicators.
-
-### TrainingTrack
-
-- Staff list: query shared `staff` where `schoolIds array-contains {schoolId}`.
-- Training records: query `modules/trainingTrack/trainingRecords` where `schoolId == {schoolId}`.
-- Staff profile module view: query training records where `staffId == {staffId}`.
-
----
-
-## 8. Security Rules Strategy (High Level)
-
-Detailed RBAC matrix and rule invariants are defined in `docs/SecurityContract.md`.
-
-Must-haves:
-
-- All reads/writes require auth.
-- Path org must equal user org.
-- Module path access requires module entitlement.
-- Module writes cannot mutate core identity entities.
-
----
-
-## 9. Aggregation Strategy
-
-- Keep shared org/school aggregates for global views.
-- Keep module-specific health summaries in `moduleHealth/{moduleId}` for sidebar indicators.
-- Update only impacted org/school/module aggregates using delta logic.
-- Run periodic reconciliation for drift correction.
-
----
-
-## 10. MVP Definition of Done (Tech)
-
-- Tenant isolation verified.
-- RBAC + module entitlement enforcement in rules and server actions.
-- Core shell persists across module navigation.
-- Top navbar lists only entitled modules.
-- Sidebar renders module health indicator (traffic-light state).
-- TrainingTrack works end-to-end as first module.
-- Immutable module audit logs enforced.
-
----
-
-## Appendix: ID Conventions
-
-Deterministic IDs:
-
-- `users/{uid}`
-- `aggregates/orgCompliance`
-- `moduleHealth/{moduleId}`
-
-Generated IDs:
-
-- `schools/{schoolId}`
-- `staff/{staffId}`
-- `modules/{moduleId}/trainingTypes/{trainingTypeId}`
-- `modules/{moduleId}/trainingRecords/{recordId}`
-- `modules/{moduleId}/auditLogs/{logId}`
+- No migration continuation from legacy paths.
+- No assumption that old completion statuses are still valid.
+- No new module build until shell + permissions baseline is stable.
+- No direct reuse of old UI/components/services in the new app codebase.
