@@ -88,6 +88,16 @@ service cloud.firestore {
         || isViewer(orgId);
     }
 
+    function hasModuleEntitlement(orgId, moduleId) {
+      return inOrg(orgId)
+        && userData(orgId).enabledModules is list
+        && userData(orgId).enabledModules.hasAny([moduleId]);
+    }
+
+    function canAccessModule(orgId, moduleId) {
+      return isSuperadmin() || hasModuleEntitlement(orgId, moduleId);
+    }
+
     match /organisations/{orgId} {
       allow read: if canReadOrgScoped(orgId);
       allow create, update, delete: if canWriteOrgScoped(orgId);
@@ -116,30 +126,10 @@ service cloud.firestore {
           || (isSchoolAdmin(orgId) && hasAnySchoolScope(orgId, request.resource.data.schoolIds));
       }
 
-      match /trainingTypes/{trainingTypeId} {
-        allow read: if canReadOrgScoped(orgId);
-        allow create, update, delete: if canWriteOrgScoped(orgId);
-      }
-
-      match /trainingRecords/{recordId} {
-        allow read: if canReadOrgScoped(orgId)
-          && (
-            isOrgAdmin(orgId)
-            || hasSchoolScope(orgId, resource.data.schoolId)
-            || isSelfStaff(orgId, resource.data.staffId)
-          );
-
-        // Admin/school_admin path. Staff self-submit is optional and constrained.
-        allow create, update: if canWriteOrgScoped(orgId)
-          || (isSchoolAdmin(orgId) && hasSchoolScope(orgId, request.resource.data.schoolId))
-          || (inOrg(orgId)
-              && userData(orgId).role == 'staff'
-              && request.resource.data.staffId == userData(orgId).staffId
-              && hasSchoolScope(orgId, request.resource.data.schoolId)
-              && !('status' in request.resource.data)
-              && !('daysToExpiry' in request.resource.data));
-
-        allow delete: if canWriteOrgScoped(orgId) || (isSchoolAdmin(orgId) && hasSchoolScope(orgId, resource.data.schoolId));
+      match /moduleHealth/{moduleId} {
+        allow read: if canReadAggregate(orgId) && canAccessModule(orgId, moduleId);
+        // Module health should be written by trusted server paths (Admin SDK), not client SDK.
+        allow create, update, delete: if false;
       }
 
       match /aggregates/{aggregateId} {
@@ -148,11 +138,61 @@ service cloud.firestore {
         allow create, update, delete: if false;
       }
 
-      match /auditLogs/{logId} {
-        allow read: if canReadAudit(orgId);
-        // Immutable: create only.
-        allow create: if canWriteOrgScoped(orgId) || isSchoolAdmin(orgId);
-        allow update, delete: if false;
+      // Module-owned collections (SchoolTrack core + modules model)
+      match /modules/{moduleId} {
+        match /trainingTypes/{trainingTypeId} {
+          allow read: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && canReadOrgScoped(orgId);
+          allow create, update, delete: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && canWriteOrgScoped(orgId);
+        }
+
+        match /trainingRecords/{recordId} {
+          allow read: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && canReadOrgScoped(orgId)
+            && (
+              isOrgAdmin(orgId)
+              || hasSchoolScope(orgId, resource.data.schoolId)
+              || isSelfStaff(orgId, resource.data.staffId)
+            );
+
+          // Admin/school_admin path. Staff self-submit is optional and constrained.
+          allow create, update: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && (
+              canWriteOrgScoped(orgId)
+              || (isSchoolAdmin(orgId) && hasSchoolScope(orgId, request.resource.data.schoolId))
+              || (inOrg(orgId)
+                  && userData(orgId).role == 'staff'
+                  && request.resource.data.staffId == userData(orgId).staffId
+                  && hasSchoolScope(orgId, request.resource.data.schoolId)
+                  && !('status' in request.resource.data)
+                  && !('daysToExpiry' in request.resource.data))
+            );
+
+          allow delete: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && (canWriteOrgScoped(orgId) || (isSchoolAdmin(orgId) && hasSchoolScope(orgId, resource.data.schoolId)));
+        }
+
+        match /auditLogs/{logId} {
+          allow read: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && canReadAudit(orgId);
+          // Immutable: create only.
+          allow create: if moduleId == 'trainingTrack'
+            && canAccessModule(orgId, moduleId)
+            && (canWriteOrgScoped(orgId) || isSchoolAdmin(orgId));
+          allow update, delete: if false;
+        }
+
+        // Deny all other module-owned collections by default until explicitly added.
+        match /{document=**} {
+          allow read, write: if false;
+        }
       }
     }
   }

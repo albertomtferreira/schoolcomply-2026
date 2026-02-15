@@ -1,6 +1,6 @@
-﻿# Compliance SaaS - Agent Architecture
+# SchoolTrack UK Platform - Agent Architecture
 
-> Vision: A structured multi-agent system supporting the Compliance SaaS.
+> Vision: A structured multi-agent system supporting the SchoolTrack platform for UK schools.
 > Each agent has a clear identity, scope, and boundaries.
 > No overlap. No confusion. Defined ownership.
 
@@ -58,9 +58,10 @@ If 3+ core agents disagree, pause and reassess with Alberto for final prioritisa
 
 Current program priority is:
 
-1. Compliance integrity
-2. Clarity and adoption
-3. Monetisation planning later
+1. UK statutory and compliance integrity
+2. Leadership clarity and operational adoption
+3. Modular platform expansion planning
+4. Monetisation planning later
 
 ---
 
@@ -72,6 +73,7 @@ Each has authority.
 Each has boundaries.
 Each protects a layer of the product.
 
-Together, they ensure the Compliance SaaS becomes:
+Together, they ensure the SchoolTrack platform becomes:
 
 **Reliable. Simple. Visual. Scalable.**
+

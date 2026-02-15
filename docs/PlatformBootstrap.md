@@ -23,9 +23,9 @@ Environment model:
 - `prod`: production tenant data
 
 Firebase project aliases (`.firebaserc`):
-- `dev -> schoolcomply-dev`
-- `staging -> schoolcomply-staging`
-- `prod -> schoolcomply-prod`
+- `dev -> schooltrack-dev`
+- `staging -> schooltrack-staging`
+- `prod -> schooltrack-prod`
 
 Rule:
 - Never share tenant data between environments.
@@ -83,7 +83,7 @@ Prerequisite:
    - `npm install`
 2. Create local env file:
    - Copy `.env.example` to `.env.local`
-   - Fill Firebase web config values for `schoolcomply-dev`
+   - Fill Firebase web config values for `schooltrack-dev`
    - Set `FIREBASE_USE_EMULATORS=true`
 3. Login Firebase CLI:
    - `npm run firebase:login`

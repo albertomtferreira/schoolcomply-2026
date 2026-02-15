@@ -10,33 +10,34 @@ Last updated: 2026-02-15
 
 ## 1. Global App Shell (Layout Contract)
 
-Goal: persistent navigation and explicit scope context on every screen.
+Goal: persistent navigation, module access clarity, and explicit scope context on every screen.
 
 Shell layout:
 
 ```txt
-+----------------------+-----------------------------------------------------------+
-| Sidebar              | Top Scope Bar                                            |
-| - Dashboard          | Org Switcher | School Switcher | Date Range | User Menu |
-| - Staff              +-----------------------------------------------------------+
-| - Training           | Page Content (changes by sidebar route + selected scope) |
-| - Reports            |                                                           |
-| - Settings           |                                                           |
-|                      |                                                           |
-| User Menu (bottom)   |                                                           |
-+----------------------+-----------------------------------------------------------+
++--------------------------------------+-----------------------------------------------------------------------+
+| Sidebar                              | Top Scope Bar                                                         |
+| - Dashboard [green/amber/red/grey]   | Org Switcher | School Switcher | Module Navbar | Date Range | User Menu |
++--------------------------------------+-----------------------------------------------------------------------+
+| - TrainingTrack [green/amber/red/grey] | Module Content (children rendered by active module route)          |
+| - StatutoryTrack [green/amber/red/grey]|                                                                      |
+| - ClubTrack [green/amber/red/grey]   |                                                                       |
+| - COSHHTrack [green/amber/red/grey]  |                                                                       |
+| User Menu (bottom)                   |                                                                       |
++--------------------------------------+-----------------------------------------------------------------------+
 ```
 
 Rules:
 - Sidebar is persistent across authenticated app pages.
 - Top scope bar is persistent and controls rendered data scope.
+- Top bar module navbar shows only modules available to current user.
+- Sidebar module rows include a traffic-light indicator sourced from module health.
 - Content area renders children based on:
-  1. selected sidebar route
+  1. selected module route
   2. selected organisation
   3. selected school (when applicable)
 - If user has one organisation, org selector is locked/read-only.
 - School selector options must always be constrained by current org and user scope.
-
 ---
 
 ## 2. Screen Map (Inside App Shell)
@@ -232,3 +233,211 @@ Reason codes (user visible):
 1. This spec reviewed by Lumen + Sentinel.
 2. Low-fidelity image exports stored in `docs/ux/wireframes/`.
 3. Any deltas reflected in `docs/UXTruthContract.md`.
+
+---
+
+## 12. Text-First Draft Wireframes (No PNG Required)
+
+Purpose: unblock design review while visual exports are pending. These drafts are canonical until PNGs are produced.
+
+### 12.1 Create/Edit Staff Modal
+
+Goal: allow scoped admins to create or update staff safely.
+
+```txt
++----------------------------------------------------------------------------------+
+| Modal Header: Create Staff / Edit Staff                                          |
++----------------------------------------------------------------------------------+
+| Full Name*                                                                        |
+| Email                                                                             |
+| Employment Role*                                                                  |
+| School Assignment* (multi-select; scoped by org and user permissions)            |
+| Job Title                                                                         |
+| Start Date                                                                        |
+| End Date                                                                          |
+| Active Status (toggle)                                                            |
++----------------------------------------------------------------------------------+
+| Inline Validation: required fields, invalid email, scope mismatch                 |
++----------------------------------------------------------------------------------+
+| Actions: Save Staff | Cancel                                                      |
++----------------------------------------------------------------------------------+
+```
+
+Behavior:
+- On create, write shared `staff/{staffId}` with scoped school IDs.
+- On edit, preserve immutable IDs and write audit entry.
+- If school selection includes out-of-scope IDs, block save with explicit error.
+
+### 12.2 Create/Edit Training Type Modal
+
+Goal: configure requirement logic that drives compliance decisions.
+
+```txt
++----------------------------------------------------------------------------------+
+| Modal Header: Create Training Type / Edit Training Type                           |
++----------------------------------------------------------------------------------+
+| Name*                                                                             |
+| Code                                                                              |
+| Expires? (toggle)                                                                 |
+| Default Validity Days (enabled only when Expires = true)                         |
+| Required for all active staff? (toggle)                                           |
+| Required For Roles (multi-select, enabled when Required for all = false)         |
++----------------------------------------------------------------------------------+
+| Rule Preview:                                                                     |
+| - Requirement applicability summary                                                |
+| - Expiry behavior summary                                                         |
++----------------------------------------------------------------------------------+
+| Actions: Save Type | Cancel                                                       |
++----------------------------------------------------------------------------------+
+```
+
+Behavior:
+- `required=true` overrides role-based requirement mapping.
+- If `expires=false`, hide/disable validity-day input.
+- Save triggers aggregate recomputation event.
+
+### 12.3 Archive/Deactivate Confirmation Modal
+
+Goal: reduce accidental destructive actions and make impacts explicit.
+
+```txt
++----------------------------------------------------------------------------------+
+| Modal Header: Confirm Archive / Deactivate                                        |
++----------------------------------------------------------------------------------+
+| Warning Text: This action may affect compliance status and visibility.            |
+| Entity: <staff/training type/school>                                              |
+| Impact Preview:                                                                   |
+| - Linked schools affected                                                         |
+| - Potential state changes (if known)                                              |
+| Confirmation Input (optional): type entity name to continue                       |
++----------------------------------------------------------------------------------+
+| Actions: Confirm Archive | Cancel                                                 |
++----------------------------------------------------------------------------------+
+```
+
+Behavior:
+- Primary action is destructive-styled and requires explicit confirmation.
+- On success, show toast + refresh impacted dashboard sections.
+
+### 12.4 Audit Timeline Drawer
+
+Goal: provide traceable history for compliance-affecting changes.
+
+```txt
++----------------------------------------------------------------------------------+
+| Drawer Header: Audit Timeline                                                     |
++----------------------------------------------------------------------------------+
+| Filters: Date Range | Actor | Action Type                                         |
++----------------------------------------------------------------------------------+
+| Timeline List                                                                      |
+| [timestamp] [actor] Created training record                                       |
+| - Entity: trainingRecords/{recordId}                                              |
+| - Change Summary: expiresAt null -> 2026-07-01                                    |
+|------------------------------------------------------------------------------------|
+| [timestamp] [actor] Updated training record                                       |
+| - Diff: provider "NGA" -> "NGA UK"                                                |
+| ...                                                                                |
++----------------------------------------------------------------------------------+
+| Actions: Close                                                                     |
++----------------------------------------------------------------------------------+
+```
+
+Behavior:
+- Read-only view; no inline edit capability.
+- Diffs should prefer concise before/after display for key fields.
+
+### 12.5 Unauthorized / No Module Access Screen
+
+Goal: explain access denial without leaving ambiguity.
+
+```txt
++----------------------------------------------------------------------------------+
+| Title: Access Restricted                                                          |
+| Message: You do not have permission to view this module.                          |
+| Details: Required entitlement missing in enabled modules.                         |
+| Actions: Go to Dashboard | Contact Org Admin                                      |
++----------------------------------------------------------------------------------+
+```
+
+Behavior:
+- Returned for unentitled module routes.
+- Must not leak module data shape in error payload.
+
+### 12.6 Scope Invalid Reset Banner Pattern
+
+Goal: notify user when current scope is auto-corrected to a valid scope.
+
+```txt
++----------------------------------------------------------------------------------+
+| Warning Banner: Selected school is no longer in your access scope.               |
+| Scope reset to: <nearest valid school>.                                           |
+| Action: Review Scope                                                              |
++----------------------------------------------------------------------------------+
+```
+
+Behavior:
+- Trigger after role/scope changes or stale deep links.
+- Preserve route when possible; otherwise redirect to module root with banner.
+
+### 12.7 Loading, Error, and Empty-State Patterns
+
+Goal: standardize data lifecycle rendering across dashboards and lists.
+
+Loading:
+```txt
+[KPI Skeleton Blocks]
+[Filter Skeleton Row]
+[Table Skeleton Rows x N]
+```
+
+Error:
+```txt
+Data unavailable.
+Last known update: <timestamp or unknown>
+[Retry]
+```
+
+Empty Filter Result:
+```txt
+No results match current filters.
+[Clear Filters]
+```
+
+Behavior:
+- Retain active filters and scope on retry.
+- Preserve last known timestamp where available.
+
+### 12.8 Training Record Upload States
+
+Goal: make upload behavior explicit before hi-fi design.
+
+```txt
+Certificate Upload
+- Idle: [Choose File]
+- Uploading: [Progress Bar 0-100%]
+- Success: [File Name] [Replace] [Remove]
+- Error: Upload failed. [Retry]
+```
+
+Behavior:
+- Validate type and size before upload begins.
+- Save disabled while upload is in progress.
+
+---
+
+## 13. Wireframe Backlog for PNG Export
+
+When visual exports begin, produce PNGs for:
+1. Org Dashboard
+2. School Dashboard
+3. Staff Profile
+4. Training Record Form
+5. Create/Edit Staff Modal
+6. Create/Edit Training Type Modal
+7. Archive/Deactivate Confirmation Modal
+8. Audit Timeline Drawer
+9. Unauthorized/No Access Screen
+10. Scope Reset Banner State
+11. Loading/Error/Empty states (dashboard variants)
+12. Upload state variants
+

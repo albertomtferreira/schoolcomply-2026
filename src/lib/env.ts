@@ -18,6 +18,9 @@ const serverEnvSchema = z.object({
   FIRESTORE_EMULATOR_HOST: z.string().min(1).optional(),
   FIREBASE_AUTH_EMULATOR_HOST: z.string().min(1).optional(),
   FIREBASE_STORAGE_EMULATOR_HOST: z.string().min(1).optional(),
+  FF_TRAININGTRACK_DUAL_WRITE: z.enum(["true", "false"]).default("false"),
+  FF_TRAININGTRACK_READ_FROM_MODULES: z.enum(["true", "false"]).default("false"),
+  FF_TRAININGTRACK_LEGACY_WRITE_DISABLED: z.enum(["true", "false"]).default("false"),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -31,3 +34,18 @@ export function getServerEnv(): ServerEnv {
   return serverEnvSchema.parse(process.env);
 }
 
+export type TrainingTrackMigrationFlags = {
+  dualWrite: boolean;
+  readFromModules: boolean;
+  legacyWriteDisabled: boolean;
+};
+
+export function getTrainingTrackMigrationFlags(): TrainingTrackMigrationFlags {
+  const env = getServerEnv();
+
+  return {
+    dualWrite: env.FF_TRAININGTRACK_DUAL_WRITE === "true",
+    readFromModules: env.FF_TRAININGTRACK_READ_FROM_MODULES === "true",
+    legacyWriteDisabled: env.FF_TRAININGTRACK_LEGACY_WRITE_DISABLED === "true",
+  };
+}

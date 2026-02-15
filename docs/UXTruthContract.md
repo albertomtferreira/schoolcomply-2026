@@ -1,9 +1,9 @@
-# UX Truth Contract (v1)
+# UX Truth Contract (v2)
 
-Purpose: define canonical dashboard state semantics, badges, filters, and visibility behavior for leadership-facing compliance UX.
+Purpose: define canonical shell behavior, module navigation, state semantics, and visibility rules for SchoolTrack.
 
-Contract owners: Lumen (clarity) and Sentinel (compliance integrity).
-Status: Phase 0.6 baseline for MVP implementation.
+Contract owners: Lumen (clarity) and Sentinel (integrity).
+Status: baseline for SchoolTrack shell + TrainingTrack module.
 Last updated: 2026-02-15.
 
 Canonical companions:
@@ -16,11 +16,11 @@ Canonical companions:
 
 ## 1. Canonical State Set
 
-Locked state identifiers (must not be renamed in code or UI copy keys):
+Locked state identifiers:
 - `compliant`
 - `expiring_soon`
 - `non_compliant`
-- `no_active_staff` (school-level neutral state only)
+- `no_active_staff`
 
 State source-of-truth:
 - Computed using rule precedence from `docs/ComplianceDecisionTable.md`.
@@ -37,164 +37,169 @@ State source-of-truth:
 | `non_compliant` | Non-Compliant | red | At least one required item missing or expired |
 | `no_active_staff` | No Active Staff | grey | School has zero active staff in scope |
 
-Non-negotiable:
-- Missing required record must render as `non_compliant` (red context).
-- `no_active_staff` is neutral (grey), never red.
-
 ---
 
-## 3. App Shell and Scope Switching Contract
+## 3. App Shell Contract (Core)
 
 Global shell requirements:
-- Persistent left sidebar navigation on authenticated app pages.
-- Persistent top scope bar containing:
+- Persistent left sidebar on authenticated pages.
+- Persistent top bar with:
   - organisation switcher
   - school switcher
+  - module navbar (entitled modules only)
   - optional date range and user menu controls
+- Module children render in central workspace area under the shell.
 
 Scope switching behavior:
-- Page data must always resolve from current `(orgId, schoolId)` scope selection.
+- Data always resolves from current `(orgId, schoolId)`.
 - If user has a single org, org switcher is read-only.
-- School switcher options must be constrained by selected org and user RBAC scope.
-- Route changes must preserve scope selection where valid.
-- If scope becomes invalid (for example role/scope change), UI must reset to nearest valid scope and notify user.
+- School switcher options are constrained by selected org and role scope.
+- Route changes preserve scope where valid.
+- If scope becomes invalid, reset to nearest valid scope and notify user.
 
 ---
 
-## 4. Modal Interaction Contract
+## 4. Module Navigation + Sidebar Indicator Contract
+
+Module navbar rules:
+- Show only modules available in `users.enabledModules`.
+- Active module is visually explicit.
+- Disabled/unentitled modules are not displayed.
+
+Sidebar indicator rules (Lumen note):
+- Each visible module row includes a compact traffic-light indicator:
+  - green: no active issues in module
+  - amber: upcoming or warning-level issues
+  - red: active failures/issues requiring action
+  - grey: no data/unavailable
+- Indicator source is `moduleHealth/{moduleId}`.
+- Indicator must be visible at a glance without opening the module.
+- Indicator must include accessible text label, not color-only.
+
+---
+
+## 5. Modal Interaction Contract
 
 Modal-first pattern:
-- Use modals for create/edit/update flows to preserve page context.
-- Use drawer/slide-over for secondary details (for example audit timeline).
+- Use modals for create/edit/update flows.
+- Use drawer/slide-over for secondary details.
 - Use confirmation modal for destructive actions.
 
-Modal behavior rules:
-- Single-modal depth only (no nested modal stacks).
-- Must support keyboard focus trap and `Esc` close.
-- Primary action must be explicit (`Save`, `Archive`, `Confirm`).
-- On success: close modal, refresh affected view section, show toast/feedback.
-- On validation error: keep modal open and show field-level errors.
+Modal rules:
+- Single-modal depth only.
+- Keyboard focus trap + `Esc` close.
+- Explicit primary action labels.
+- On success: close modal, refresh affected section, show feedback.
+- On validation error: keep open, show field-level errors.
 
 ---
 
-## 5. Filter Contract
+## 6. Filter Contract (TrainingTrack baseline)
 
-Minimum filters for org and school dashboards:
-- `state` (multi-select): `compliant`, `expiring_soon`, `non_compliant`, `no_active_staff` (school-level contexts only)
+Minimum filters:
+- `state` (multi-select): `compliant`, `expiring_soon`, `non_compliant`, `no_active_staff`
 - `school` (org dashboard)
 - `employmentRole` (school/staff contexts)
-- `trainingType` (staff detail contexts)
+- `trainingType` (staff detail)
 
 Filter behavior:
-- Filters are conjunctive (`AND`) across groups.
-- Within a single filter group, values are disjunctive (`OR`).
-- Default state filter at org/school dashboard load: all states included.
+- `AND` across groups.
+- `OR` within a group.
+- Default includes all states.
 
 ---
 
-## 6. Sorting and Priority Contract
+## 7. Sorting and Priority Contract
 
-Default sort order for risk-first visibility:
+Default sort order:
 1. `non_compliant`
 2. `expiring_soon`
 3. `compliant`
 4. `no_active_staff`
 
 Secondary sort:
-- alphabetical by school name (dashboard)
-- alphabetical by staff surname/full name (school view)
+- school name alphabetical
+- staff name alphabetical
 
 ---
 
-## 7. Drill-Down Contract
+## 8. Drill-Down Contract
 
-Required drill-down path:
+Required path:
 1. Org dashboard row -> school dashboard
 2. School dashboard row -> staff profile
-3. Staff profile -> required training checklist and record evidence
+3. Staff profile -> required training checklist + evidence
 
-Drill-down integrity:
+Integrity rule:
 - Parent state must be explainable by child rows.
-- Every red/amber row must show explicit contributing reasons.
 
 ---
 
-## 8. Reason Codes (User-Visible)
+## 9. Reason Codes
 
-Allowed reason code set for status explanation:
+Allowed reason codes:
 - `missing_required_record`
 - `expired_required_record`
 - `expiring_soon_required_record`
 - `no_active_staff`
 
 Reason display rules:
-- `non_compliant` rows must show at least one of:
-  - missing required record
-  - expired required record
-- `expiring_soon` rows must show the nearest expiry item/date.
+- `non_compliant` rows must show missing/expired reason.
+- `expiring_soon` rows must show nearest expiry item/date.
 
 ---
 
-## 9. Data Freshness Contract
+## 10. Data Freshness Contract
 
-Freshness source:
-- `lastCalculatedAt` from aggregate docs.
+Freshness sources:
+- dashboard state: aggregate docs
+- module indicator state: `moduleHealth/{moduleId}.lastCalculatedAt`
 
 Display rules:
-- Always display "Last updated" timestamp on org and school dashboards.
-- If `lastCalculatedAt` is older than 24 hours, show stale data warning banner.
-- If aggregate doc missing, show explicit "Data unavailable - retrying" state and avoid showing misleading green status.
+- Always show "Last updated" on dashboards.
+- Show stale banner when freshness exceeds 24h.
+- If health doc missing, show grey indicator and "Data unavailable".
 
 ---
 
-## 10. Empty and Error State Contract
+## 11. Empty and Error States
 
-Minimum empty/error states:
-- No schools in org -> onboarding empty state with clear action.
-- No staff in school -> empty state; do not mark school red unless rules indicate non-compliance.
-- No records for required training -> shown as `missing_required_record` and contributes to red status.
-- Aggregate fetch error -> error panel + retry control + preserve last known timestamp if available.
-
----
-
-## 11. Accessibility and Copy Contract
-
-- Badge labels must be text-visible, not color-only.
-- Red/Amber/Green states require icon + label pairing.
-- Modals must be fully keyboard-accessible with visible focus states.
-- Use plain language:
-  - "Non-Compliant", not technical error codes
-  - "Expiring Soon", not ambiguous "Warning"
+Minimum states:
+- No schools -> onboarding empty state.
+- No staff in school -> neutral empty state.
+- No records for required training -> `missing_required_record` (red impact).
+- Aggregate/module health fetch error -> error panel + retry + preserve known timestamp if available.
 
 ---
 
-## 12. Acceptance Criteria (Phase 1 UX Baseline)
+## 12. Accessibility and Copy
 
-1. All four canonical states render consistently across org, school, and staff views where applicable.
-2. Missing required record always surfaces as `non_compliant`.
-3. Default sorting shows red items first.
-4. Filter combinations behave as defined (AND across groups, OR within group).
-5. Every non-compliant row has at least one visible reason code.
-6. `lastCalculatedAt` is visible on dashboards.
-7. Stale-data banner appears when freshness threshold is exceeded.
-8. `no_active_staff` appears as grey and is excluded from red counts.
-9. Sidebar and scope bar remain persistent across page navigation.
-10. Scope switching updates content to selected org/school without stale cross-scope data.
-11. Create/edit flows run in modal context with required accessibility behavior.
+- State and module indicators must be text-visible, not color-only.
+- Traffic-light indicators require icon + label pairing.
+- Modals must be keyboard-accessible with visible focus.
+- Plain language labels only.
 
 ---
 
-## 13. Sign-Off Checklist (Phase 1 UX Baseline)
+## 13. Acceptance Criteria
+
+1. Core shell persists across module navigation.
+2. Top navbar shows only entitled modules.
+3. Sidebar shows per-module traffic-light indicator from `moduleHealth`.
+4. Missing required record surfaces as `non_compliant`.
+5. Default sorting shows red first.
+6. Filter logic follows AND/OR contract.
+7. Every non-compliant row has visible reason code.
+8. `lastCalculatedAt` is visible and stale banner works.
+9. `no_active_staff` remains neutral grey.
+10. Scope switching never leaks cross-scope data.
+
+---
+
+## 14. Sign-Off Checklist
 
 - State identifiers match `docs/ComplianceDecisionTable.md`.
-- App shell, badge, filter, and sort contracts are explicit and testable.
+- Shell, module navbar, and sidebar indicator contracts are explicit and testable.
 - Reason code set is fixed and implementation-ready.
-- Freshness and error behavior prevent false trust in stale data.
-- Modal behavior is explicit and accessibility-compliant.
-
----
-
-## 14. Wireframe References (Phase 1)
-
-- Wireframe specification: `docs/ux/Wireframes.md`
-- Wireframe image exports: `docs/ux/wireframes/`
+- Freshness/error behavior prevents false trust.
+- Modal behavior is accessibility-compliant.

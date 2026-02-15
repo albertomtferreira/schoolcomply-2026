@@ -19,6 +19,7 @@ type UserSeed = {
   staffId?: string;
   isActive?: boolean;
   orgId?: string;
+  enabledModules?: string[];
 };
 
 async function seedUser(orgId: string, uid: string, user: UserSeed): Promise<void> {
@@ -32,6 +33,7 @@ async function seedUser(orgId: string, uid: string, user: UserSeed): Promise<voi
       orgId: user.orgId ?? orgId,
       schoolIds: user.schoolIds ?? [],
       staffId: user.staffId ?? null,
+      enabledModules: user.enabledModules ?? ["trainingTrack"],
       isActive: user.isActive ?? true,
       createdAt: ts,
       updatedAt: ts,
@@ -52,7 +54,7 @@ function authed(uid: string) {
 
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
-    projectId: "schoolcomply-dev",
+    projectId: "schooltrack-dev",
     firestore: { rules },
   });
 });
@@ -85,7 +87,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("saA");
       await assertFails(
-        setDoc(doc(db, "organisations/orgB/trainingRecords/r1"), {
+        setDoc(doc(db, "organisations/orgB/modules/trainingTrack/trainingRecords/r1"), {
           staffId: "st1",
           schoolId: "s1",
           trainingTypeId: "tt1",
@@ -128,7 +130,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("adminA");
       await assertSucceeds(
-        setDoc(doc(db, "organisations/orgA/trainingTypes/tt1"), {
+        setDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingTypes/tt1"), {
           name: "First Aid",
           expires: true,
           required: true,
@@ -142,7 +144,7 @@ describe("Security Contract - Firestore Rules", () => {
   describe("4.3 School Scope Enforcement", () => {
     it("5. school_admin with schoolIds=['s1'] reads record where schoolId='s1' -> allow", async () => {
       await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
-      await seedDoc("organisations/orgA/trainingRecords/r1", {
+      await seedDoc("organisations/orgA/modules/trainingTrack/trainingRecords/r1", {
         staffId: "st1",
         schoolId: "s1",
         trainingTypeId: "tt1",
@@ -152,7 +154,7 @@ describe("Security Contract - Firestore Rules", () => {
       });
 
       const db = authed("saA");
-      await assertSucceeds(getDoc(doc(db, "organisations/orgA/trainingRecords/r1")));
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/r1")));
     });
 
     it("6. school_admin with schoolIds=['s1'] writes record where schoolId='s2' -> deny", async () => {
@@ -160,7 +162,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("saA");
       await assertFails(
-        setDoc(doc(db, "organisations/orgA/trainingRecords/r2"), {
+        setDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/r2"), {
           staffId: "st1",
           schoolId: "s2",
           trainingTypeId: "tt1",
@@ -251,7 +253,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("staffUserA");
       await assertSucceeds(
-        setDoc(doc(db, "organisations/orgA/trainingRecords/rSelf"), {
+        setDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/rSelf"), {
           staffId: "st1",
           schoolId: "s1",
           trainingTypeId: "tt1",
@@ -268,7 +270,7 @@ describe("Security Contract - Firestore Rules", () => {
         schoolIds: ["s1"],
         staffId: "st1",
       });
-      await seedDoc("organisations/orgA/trainingRecords/rOther", {
+      await seedDoc("organisations/orgA/modules/trainingTrack/trainingRecords/rOther", {
         staffId: "st2",
         schoolId: "s1",
         trainingTypeId: "tt1",
@@ -279,7 +281,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("staffUserA");
       await assertFails(
-        updateDoc(doc(db, "organisations/orgA/trainingRecords/rOther"), {
+        updateDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/rOther"), {
           notes: "attempted edit",
         }),
       );
@@ -292,7 +294,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("adminA");
       await assertSucceeds(
-        setDoc(doc(db, "organisations/orgA/auditLogs/log1"), {
+        setDoc(doc(db, "organisations/orgA/modules/trainingTrack/auditLogs/log1"), {
           actorUserId: "adminA",
           action: "create",
           entityType: "staff",
@@ -304,7 +306,7 @@ describe("Security Contract - Firestore Rules", () => {
 
     it("14. org_admin updates existing audit log -> deny", async () => {
       await seedUser("orgA", "adminA", { role: "org_admin" });
-      await seedDoc("organisations/orgA/auditLogs/log2", {
+      await seedDoc("organisations/orgA/modules/trainingTrack/auditLogs/log2", {
         actorUserId: "adminA",
         action: "create",
         entityType: "staff",
@@ -314,7 +316,7 @@ describe("Security Contract - Firestore Rules", () => {
 
       const db = authed("adminA");
       await assertFails(
-        updateDoc(doc(db, "organisations/orgA/auditLogs/log2"), {
+        updateDoc(doc(db, "organisations/orgA/modules/trainingTrack/auditLogs/log2"), {
           action: "update",
         }),
       );
@@ -322,7 +324,7 @@ describe("Security Contract - Firestore Rules", () => {
 
     it("15. school_admin deletes audit log -> deny", async () => {
       await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
-      await seedDoc("organisations/orgA/auditLogs/log3", {
+      await seedDoc("organisations/orgA/modules/trainingTrack/auditLogs/log3", {
         actorUserId: "saA",
         action: "create",
         entityType: "trainingRecord",
@@ -331,7 +333,7 @@ describe("Security Contract - Firestore Rules", () => {
       });
 
       const db = authed("saA");
-      await assertFails(deleteDoc(doc(db, "organisations/orgA/auditLogs/log3")));
+      await assertFails(deleteDoc(doc(db, "organisations/orgA/modules/trainingTrack/auditLogs/log3")));
     });
   });
 
@@ -427,6 +429,7 @@ describe("Security Contract - Firestore Rules", () => {
           role: "viewer",
           orgId: "orgB",
           schoolIds: ["s1"],
+          enabledModules: [],
           isActive: true,
           createdAt: ts,
           updatedAt: ts,
@@ -434,5 +437,63 @@ describe("Security Contract - Firestore Rules", () => {
       );
     });
   });
-});
 
+  describe("4.8 Module Entitlement", () => {
+    it("21. user without trainingTrack entitlement reads module training record -> deny", async () => {
+      await seedUser("orgA", "viewerNoModule", {
+        role: "viewer",
+        schoolIds: ["s1"],
+        enabledModules: [],
+      });
+      await seedDoc("organisations/orgA/modules/trainingTrack/trainingRecords/r1", {
+        staffId: "st1",
+        schoolId: "s1",
+        trainingTypeId: "tt1",
+        createdBy: "adminA",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("viewerNoModule");
+      await assertFails(getDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/r1")));
+    });
+
+    it("22. user with trainingTrack entitlement reads scoped module training record -> allow", async () => {
+      await seedUser("orgA", "viewerWithModule", {
+        role: "viewer",
+        schoolIds: ["s1"],
+        enabledModules: ["trainingTrack"],
+      });
+      await seedDoc("organisations/orgA/modules/trainingTrack/trainingRecords/r2", {
+        staffId: "st1",
+        schoolId: "s1",
+        trainingTypeId: "tt1",
+        createdBy: "adminA",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("viewerWithModule");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/modules/trainingTrack/trainingRecords/r2")));
+    });
+
+    it("23. legacy root training path is no longer accessible -> deny", async () => {
+      await seedUser("orgA", "viewerWithModule", {
+        role: "viewer",
+        schoolIds: ["s1"],
+        enabledModules: ["trainingTrack"],
+      });
+      await seedDoc("organisations/orgA/trainingRecords/rLegacy", {
+        staffId: "st1",
+        schoolId: "s1",
+        trainingTypeId: "tt1",
+        createdBy: "adminA",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("viewerWithModule");
+      await assertFails(getDoc(doc(db, "organisations/orgA/trainingRecords/rLegacy")));
+    });
+  });
+});

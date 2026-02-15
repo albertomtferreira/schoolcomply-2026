@@ -1,9 +1,8 @@
 {
   "projects": {
-    "dev": "schoolcomply-dev",
-    "staging": "schoolcomply-staging",
-    "prod": "schoolcomply-prod"
+    "dev": "schooltrack-dev",
+    "staging": "schooltrack-staging",
+    "prod": "schooltrack-prod"
   },
   "targets": {}
 }
-

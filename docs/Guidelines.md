@@ -1,10 +1,10 @@
-﻿# Compliance SaaS - Brand Guidelines
+# SchoolTrack - Brand Guidelines
 
 ## 1. Brand Positioning
 
-**Working Name:** **SchoolComply**
+**Core Brand:** **SchoolTrack**
 
-**Category:** School Compliance and Operational Intelligence SaaS
+**Category:** UK School Operations and Compliance Platform
 
 **Audience:**
 
@@ -18,7 +18,7 @@
 
 > Reliability. Simplicity. Visual clarity.
 
-This platform exists to remove compliance anxiety from schools.
+This platform exists to reduce compliance anxiety and improve operational control in schools.
 
 ---
 
@@ -26,11 +26,11 @@ This platform exists to remove compliance anxiety from schools.
 
 ### Mission
 
-Give schools a simple, visual, real-time understanding of compliance status before issues become risks.
+Give UK schools a simple, visual, real-time understanding of operational and compliance status before issues become risks.
 
 ### Vision
 
-Become the lightweight but powerful compliance layer for schools across the UK, starting with training and statutory monitoring and expanding into a full compliance suite.
+Become the lightweight but powerful operating layer for schools across the UK, starting with training and statutory monitoring and expanding through focused modules.
 
 ---
 
@@ -70,7 +70,7 @@ Tone of voice:
 
 ## 5. Positioning Statement
 
-Unlike generic compliance trackers, SchoolComply is:
+Unlike generic compliance trackers, SchoolTrack is:
 
 - Built specifically for schools
 - Designed around real operational workflows
@@ -110,7 +110,12 @@ This insider credibility is a core differentiator.
 
 ## 7. Product Architecture Vision
 
-### Phase 1
+Module structure:
+
+- Core platform: `SchoolTrack`
+- Planned modules: `TrainingTrack`, `ClubTrack`, `StatutoryTrack`, `COSHHTrack`
+
+### Phase 1 (Core SchoolTrack)
 
 - Staff training compliance
 - Expiry monitoring
@@ -118,14 +123,14 @@ This insider credibility is a core differentiator.
 - School-level breakdown
 - Multi-school staff visibility
 
-### Phase 2
+### Phase 2 (Priority Modules)
 
-- Statutory inspections
+- Statutory inspections (`StatutoryTrack`)
 - Fire safety monitoring
 - Risk assessment tracking
 - Document storage and certification upload
 
-### Phase 3
+### Phase 3 (Ecosystem Expansion)
 
 - Full compliance suite
 - Predictive alerts
@@ -161,3 +166,4 @@ Become the quiet infrastructure layer that school leaders rely on daily.
 Not flashy.
 Not noisy.
 Just indispensable.
+

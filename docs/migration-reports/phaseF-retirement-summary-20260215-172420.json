@@ -1,0 +1,37 @@
+{
+    "generatedAt":  "2026-02-15T17:24:32",
+    "phase":  "F",
+    "rulesTests":  "PASS (23/23)",
+    "smokeTests":  "PASS (3/3)",
+    "legacyRulesRemoved":  true,
+    "moduleOnlyPaths":  true,
+    "reports":  [
+                    {
+                        "path":  "docs/migration-reports/staging-retire-legacy-dry-20260215-172359.json",
+                        "projectId":  "schooltrack-staging",
+                        "dryRun":  true,
+                        "forceDelete":  false,
+                        "orgCount":  0
+                    },
+                    {
+                        "path":  "docs/migration-reports/staging-retire-legacy-20260215-172406.json",
+                        "projectId":  "schooltrack-staging",
+                        "dryRun":  false,
+                        "forceDelete":  true,
+                        "orgCount":  0
+                    },
+                    {
+                        "path":  "docs/migration-reports/prod-retire-legacy-20260215-172414.json",
+                        "projectId":  "schooltrack-prod",
+                        "dryRun":  false,
+                        "forceDelete":  true,
+                        "orgCount":  0
+                    }
+                ],
+    "notes":  [
+                  "No organisations found in report: docs/migration-reports/staging-retire-legacy-dry-20260215-172359.json",
+                  "No organisations found in report: docs/migration-reports/staging-retire-legacy-20260215-172406.json",
+                  "No organisations found in report: docs/migration-reports/prod-retire-legacy-20260215-172414.json"
+              ],
+    "finalSignOff":  "Forge+Sentinel checklist sign-off pending human approval"
+}
