@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# agents
+/src/lib/agents
+
 # next.js
 /.next/
 /out/
