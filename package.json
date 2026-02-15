@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "firebase:login": "firebase login",
+    "firebase:emulators": "firebase emulators:start --project schoolcomply-dev",
+    "firebase:rules:test": "firebase emulators:exec --project schoolcomply-dev \"npm run lint\""
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -28,6 +31,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "firebase-tools": "^15.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

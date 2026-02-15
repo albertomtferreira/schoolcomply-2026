@@ -34,21 +34,29 @@ Canonical compliance logic reference: `docs/ComplianceDecisionTable.md`.
 - Freeze Firestore collection and field schema from `docs/Architecture.md`.
 - Confirm required indexes and deterministic ID conventions.
 - Artifact: schema + index checklist approved in architecture docs.
+- Artifact location: `docs/DataContract.md` and `firestore.indexes.json`.
+- Status: baseline completed (Data Contract v1), ready for schema/rules implementation.
 
 3. Security Contract (Forge + Sentinel)
 - Define role-to-action matrix (superadmin, org_admin, school_admin, staff, viewer).
 - Draft Firestore rules for org, school, staff, training, and audit scopes.
 - Artifact: RBAC matrix + rules test cases.
+- Artifact location: `docs/SecurityContract.md` and `firestore.rules`.
+- Status: baseline completed (Security Contract v1), ready for emulator test implementation.
 
 4. Aggregate Contract (Forge)
 - Define delta update logic for `orgCompliance` and `school_{schoolId}`.
 - Define nightly reconciliation logic and drift correction behavior.
 - Artifact: aggregate update and reconciliation spec.
+- Artifact location: `docs/AggregateContract.md`.
+- Status: baseline completed (Aggregate Contract v1), ready for implementation and load testing.
 
 5. Platform Bootstrap (Forge)
 - Validate Firebase environment separation (`dev`, `staging`, `prod`).
 - Define environment variable contract and local emulator setup.
 - Artifact: reproducible local setup baseline.
+- Artifact location: `docs/PlatformBootstrap.md`, `firebase.json`, `.firebaserc`, `.env.example`.
+- Status: baseline completed (Platform Bootstrap v1), ready for team onboarding.
 
 6. UX Truth Contract (Lumen + Sentinel)
 - Lock state semantics for dashboard badges and filters:
@@ -57,6 +65,8 @@ Canonical compliance logic reference: `docs/ComplianceDecisionTable.md`.
   - `non_compliant`
   - `no_active_staff`
 - Artifact: state mapping aligned with decision table and architecture.
+- Artifact location: `docs/UXTruthContract.md`.
+- Status: baseline completed (UX Truth Contract v1), ready for UI implementation and QA checks.
 
 ### Phase 0 Exit Gate (Go/No-Go to Phase 1)
 

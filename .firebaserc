@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "dev": "schoolcomply-dev",
+    "staging": "schoolcomply-staging",
+    "prod": "schoolcomply-prod"
+  },
+  "targets": {}
+}
+

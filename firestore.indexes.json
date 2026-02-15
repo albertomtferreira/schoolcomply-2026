@@ -1,0 +1,39 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "trainingRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainingRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "staffId", "order": "ASCENDING" },
+        { "fieldPath": "trainingTypeId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainingRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolId", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainingRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "staffId", "order": "ASCENDING" },
+        { "fieldPath": "trainingTypeId", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
+

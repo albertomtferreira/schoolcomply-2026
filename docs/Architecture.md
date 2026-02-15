@@ -3,6 +3,11 @@
 > Goal: a **multi-tenant**, **role-based** system that gives **instant compliance clarity**.
 > Rule: **1 expired training = non-compliant**.
 > Canonical rules reference: `docs/ComplianceDecisionTable.md`.
+> Canonical data contract reference: `docs/DataContract.md`.
+> Canonical security contract reference: `docs/SecurityContract.md`.
+> Canonical aggregate contract reference: `docs/AggregateContract.md`.
+> Canonical platform bootstrap reference: `docs/PlatformBootstrap.md`.
+> Canonical UX truth reference: `docs/UXTruthContract.md`.
 
 ---
 
@@ -271,6 +276,8 @@ A school is **non-compliant** if any active staff member linked to that school i
 
 ## 6. Query Patterns (Dashboards)
 
+Dashboard state semantics, badge behavior, and filter/sort contracts are defined in `docs/UXTruthContract.md`.
+
 ### Org Dashboard
 
 - List schools with compliance state:
@@ -299,9 +306,14 @@ Create composite indexes when Firestore prompts. Common ones:
 - `trainingRecords` by `schoolId + expiresAt`
 - `staff` by `schoolIds` (array-contains)
 
+Frozen index baseline is defined in `firestore.indexes.json`.
+
 ---
 
 ## 8. Security Rules Strategy (High Level)
+
+Detailed RBAC matrix, rule invariants, and rules test cases are defined in `docs/SecurityContract.md`.
+Baseline Firestore rules file: `firestore.rules`.
 
 ### Must-Haves
 
@@ -352,6 +364,8 @@ Create composite indexes when Firestore prompts. Common ones:
 
 ## 10. Aggregation Strategy (P1)
 
+Detailed delta logic, event handling, reconciliation, and idempotency rules are defined in `docs/AggregateContract.md`.
+
 ### Decision
 
 Aggregates are core in MVP.
@@ -368,6 +382,8 @@ Aggregates are core in MVP.
 ---
 
 ## 11. Environments & Separation
+
+Detailed environment contracts, aliases, and local setup workflow are defined in `docs/PlatformBootstrap.md`.
 
 - `dev`: local + emulator
 - `staging`: external pilot
