@@ -1,0 +1,438 @@
+import { readFileSync } from "node:fs";
+import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import {
+  assertFails,
+  assertSucceeds,
+  initializeTestEnvironment,
+  type RulesTestEnvironment,
+} from "@firebase/rules-unit-testing";
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+
+let testEnv: RulesTestEnvironment;
+const rules = readFileSync("firestore.rules", "utf8");
+
+const ts = "2026-02-15T00:00:00.000Z";
+
+type UserSeed = {
+  role: "org_admin" | "school_admin" | "staff" | "viewer";
+  schoolIds?: string[];
+  staffId?: string;
+  isActive?: boolean;
+  orgId?: string;
+};
+
+async function seedUser(orgId: string, uid: string, user: UserSeed): Promise<void> {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, `organisations/${orgId}/users/${uid}`), {
+      uid,
+      fullName: uid,
+      email: `${uid}@example.com`,
+      role: user.role,
+      orgId: user.orgId ?? orgId,
+      schoolIds: user.schoolIds ?? [],
+      staffId: user.staffId ?? null,
+      isActive: user.isActive ?? true,
+      createdAt: ts,
+      updatedAt: ts,
+    });
+  });
+}
+
+async function seedDoc(path: string, data: Record<string, unknown>): Promise<void> {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, path), data);
+  });
+}
+
+function authed(uid: string) {
+  return testEnv.authenticatedContext(uid).firestore();
+}
+
+beforeAll(async () => {
+  testEnv = await initializeTestEnvironment({
+    projectId: "schoolcomply-dev",
+    firestore: { rules },
+  });
+});
+
+afterAll(async () => {
+  await testEnv.cleanup();
+});
+
+beforeEach(async () => {
+  await testEnv.clearFirestore();
+});
+
+describe("Security Contract - Firestore Rules", () => {
+  describe("4.1 Tenant Isolation", () => {
+    it("1. org_admin from org A reads school from org B -> deny", async () => {
+      await seedUser("orgA", "adminA", { role: "org_admin" });
+      await seedDoc("organisations/orgB/schools/s1", {
+        name: "School B1",
+        status: "active",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("adminA");
+      await assertFails(getDoc(doc(db, "organisations/orgB/schools/s1")));
+    });
+
+    it("2. school_admin from org A writes training record in org B -> deny", async () => {
+      await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
+
+      const db = authed("saA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgB/trainingRecords/r1"), {
+          staffId: "st1",
+          schoolId: "s1",
+          trainingTypeId: "tt1",
+          createdBy: "saA",
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+  });
+
+  describe("4.2 Org Admin Access", () => {
+    it("3. org_admin reads/writes staff in own org -> allow", async () => {
+      await seedUser("orgA", "adminA", { role: "org_admin" });
+      await seedDoc("organisations/orgA/staff/st1", {
+        fullName: "Staff 1",
+        schoolIds: ["s1"],
+        employmentRole: "teacher",
+        isActive: true,
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("adminA");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/staff/st1")));
+      await assertSucceeds(
+        setDoc(doc(db, "organisations/orgA/staff/st2"), {
+          fullName: "Staff 2",
+          schoolIds: ["s1"],
+          employmentRole: "teacher",
+          isActive: true,
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+
+    it("4. org_admin creates training type in own org -> allow", async () => {
+      await seedUser("orgA", "adminA", { role: "org_admin" });
+
+      const db = authed("adminA");
+      await assertSucceeds(
+        setDoc(doc(db, "organisations/orgA/trainingTypes/tt1"), {
+          name: "First Aid",
+          expires: true,
+          required: true,
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+  });
+
+  describe("4.3 School Scope Enforcement", () => {
+    it("5. school_admin with schoolIds=['s1'] reads record where schoolId='s1' -> allow", async () => {
+      await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
+      await seedDoc("organisations/orgA/trainingRecords/r1", {
+        staffId: "st1",
+        schoolId: "s1",
+        trainingTypeId: "tt1",
+        createdBy: "saA",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("saA");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/trainingRecords/r1")));
+    });
+
+    it("6. school_admin with schoolIds=['s1'] writes record where schoolId='s2' -> deny", async () => {
+      await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
+
+      const db = authed("saA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/trainingRecords/r2"), {
+          staffId: "st1",
+          schoolId: "s2",
+          trainingTypeId: "tt1",
+          createdBy: "saA",
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+
+    it("7. viewer with schoolIds=['s1'] reads staff linked to s1 -> allow", async () => {
+      await seedUser("orgA", "viewerA", { role: "viewer", schoolIds: ["s1"] });
+      await seedDoc("organisations/orgA/staff/st1", {
+        fullName: "Staff 1",
+        schoolIds: ["s1", "s3"],
+        employmentRole: "teacher",
+        isActive: true,
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("viewerA");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/staff/st1")));
+    });
+
+    it("8. viewer attempts any write -> deny", async () => {
+      await seedUser("orgA", "viewerA", { role: "viewer", schoolIds: ["s1"] });
+
+      const db = authed("viewerA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/staff/st2"), {
+          fullName: "Staff 2",
+          schoolIds: ["s1"],
+          employmentRole: "teacher",
+          isActive: true,
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+  });
+
+  describe("4.4 Staff Self Access", () => {
+    it("9. staff reads own staff doc via users.staffId match -> allow", async () => {
+      await seedUser("orgA", "staffUserA", {
+        role: "staff",
+        schoolIds: ["s1"],
+        staffId: "st1",
+      });
+      await seedDoc("organisations/orgA/staff/st1", {
+        fullName: "Self Staff",
+        schoolIds: ["s1"],
+        employmentRole: "teacher",
+        isActive: true,
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("staffUserA");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/staff/st1")));
+    });
+
+    it("10. staff reads another staff doc -> deny", async () => {
+      await seedUser("orgA", "staffUserA", {
+        role: "staff",
+        schoolIds: ["s1"],
+        staffId: "st1",
+      });
+      await seedDoc("organisations/orgA/staff/st2", {
+        fullName: "Other Staff",
+        schoolIds: ["s1"],
+        employmentRole: "teacher",
+        isActive: true,
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("staffUserA");
+      await assertFails(getDoc(doc(db, "organisations/orgA/staff/st2")));
+    });
+
+    it("11. staff submits own training record with staffId match and scoped school -> allow", async () => {
+      await seedUser("orgA", "staffUserA", {
+        role: "staff",
+        schoolIds: ["s1"],
+        staffId: "st1",
+      });
+
+      const db = authed("staffUserA");
+      await assertSucceeds(
+        setDoc(doc(db, "organisations/orgA/trainingRecords/rSelf"), {
+          staffId: "st1",
+          schoolId: "s1",
+          trainingTypeId: "tt1",
+          createdBy: "staffUserA",
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+
+    it("12. staff updates another staff member record -> deny", async () => {
+      await seedUser("orgA", "staffUserA", {
+        role: "staff",
+        schoolIds: ["s1"],
+        staffId: "st1",
+      });
+      await seedDoc("organisations/orgA/trainingRecords/rOther", {
+        staffId: "st2",
+        schoolId: "s1",
+        trainingTypeId: "tt1",
+        createdBy: "adminA",
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("staffUserA");
+      await assertFails(
+        updateDoc(doc(db, "organisations/orgA/trainingRecords/rOther"), {
+          notes: "attempted edit",
+        }),
+      );
+    });
+  });
+
+  describe("4.5 Immutable Audit Logs", () => {
+    it("13. org_admin creates audit log -> allow", async () => {
+      await seedUser("orgA", "adminA", { role: "org_admin" });
+
+      const db = authed("adminA");
+      await assertSucceeds(
+        setDoc(doc(db, "organisations/orgA/auditLogs/log1"), {
+          actorUserId: "adminA",
+          action: "create",
+          entityType: "staff",
+          entityId: "st1",
+          createdAt: ts,
+        }),
+      );
+    });
+
+    it("14. org_admin updates existing audit log -> deny", async () => {
+      await seedUser("orgA", "adminA", { role: "org_admin" });
+      await seedDoc("organisations/orgA/auditLogs/log2", {
+        actorUserId: "adminA",
+        action: "create",
+        entityType: "staff",
+        entityId: "st1",
+        createdAt: ts,
+      });
+
+      const db = authed("adminA");
+      await assertFails(
+        updateDoc(doc(db, "organisations/orgA/auditLogs/log2"), {
+          action: "update",
+        }),
+      );
+    });
+
+    it("15. school_admin deletes audit log -> deny", async () => {
+      await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
+      await seedDoc("organisations/orgA/auditLogs/log3", {
+        actorUserId: "saA",
+        action: "create",
+        entityType: "trainingRecord",
+        entityId: "r1",
+        createdAt: ts,
+      });
+
+      const db = authed("saA");
+      await assertFails(deleteDoc(doc(db, "organisations/orgA/auditLogs/log3")));
+    });
+  });
+
+  describe("4.6 Aggregate Protection", () => {
+    it("16. viewer writes aggregates/orgCompliance -> deny", async () => {
+      await seedUser("orgA", "viewerA", { role: "viewer", schoolIds: ["s1"] });
+
+      const db = authed("viewerA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/aggregates/orgCompliance"), {
+          compliantCount: 1,
+          nonCompliantCount: 0,
+          expiringSoonCount: 0,
+          lastCalculatedAt: ts,
+        }),
+      );
+    });
+
+    it("17. school_admin writes aggregate doc directly -> deny", async () => {
+      await seedUser("orgA", "saA", { role: "school_admin", schoolIds: ["s1"] });
+
+      const db = authed("saA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/aggregates/school_s1"), {
+          compliantCount: 1,
+          nonCompliantCount: 0,
+          expiringSoonCount: 0,
+          lastCalculatedAt: ts,
+        }),
+      );
+    });
+
+    it("18. org_admin reads aggregate doc in own org -> allow", async () => {
+      await seedUser("orgA", "adminA", { role: "org_admin" });
+      await seedDoc("organisations/orgA/aggregates/orgCompliance", {
+        compliantCount: 3,
+        nonCompliantCount: 1,
+        expiringSoonCount: 2,
+        lastCalculatedAt: ts,
+      });
+
+      const db = authed("adminA");
+      await assertSucceeds(getDoc(doc(db, "organisations/orgA/aggregates/orgCompliance")));
+    });
+  });
+
+  describe("4.7 User Record Integrity", () => {
+    it("19. non-admin create/update users/{uid} for another uid -> deny", async () => {
+      await seedUser("orgA", "viewerA", { role: "viewer", schoolIds: ["s1"] });
+      await seedDoc("organisations/orgA/users/targetUser", {
+        uid: "targetUser",
+        fullName: "Target",
+        email: "target@example.com",
+        role: "staff",
+        orgId: "orgA",
+        schoolIds: ["s1"],
+        isActive: true,
+        createdAt: ts,
+        updatedAt: ts,
+      });
+
+      const db = authed("viewerA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/users/otherUser"), {
+          uid: "otherUser",
+          fullName: "Other",
+          email: "other@example.com",
+          role: "viewer",
+          orgId: "orgA",
+          schoolIds: ["s1"],
+          isActive: true,
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+
+      await assertFails(
+        updateDoc(doc(db, "organisations/orgA/users/targetUser"), {
+          fullName: "Hacked",
+        }),
+      );
+    });
+
+    it("20. non-admin user tries to set orgId different from path org -> deny", async () => {
+      await seedUser("orgA", "viewerA", { role: "viewer", schoolIds: ["s1"] });
+
+      const db = authed("viewerA");
+      await assertFails(
+        setDoc(doc(db, "organisations/orgA/users/viewerA"), {
+          uid: "viewerA",
+          fullName: "Viewer A",
+          email: "viewer@example.com",
+          role: "viewer",
+          orgId: "orgB",
+          schoolIds: ["s1"],
+          isActive: true,
+          createdAt: ts,
+          updatedAt: ts,
+        }),
+      );
+    });
+  });
+});
+

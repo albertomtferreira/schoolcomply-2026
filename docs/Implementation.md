@@ -79,6 +79,19 @@ All conditions must pass before starting Phase 1:
 - Firebase environment model validated for `dev/staging/prod`.
 - Local setup reproducible by a second person without undocumented steps.
 
+### Phase 0 Exit Gate Evidence (Current)
+
+| Gate Item | Status | Evidence | Owner | Date |
+| --- | --- | --- | --- | --- |
+| Compliance decision table approved and unchanged by unresolved comments | PASS | `docs/ComplianceDecisionTable.md` (Rule Contract v1), `docs/UXTruthContract.md` state alignment | Sentinel | 2026-02-15 |
+| Schema and index plan approved and frozen | PASS | `docs/DataContract.md`, `firestore.indexes.json` | Forge | 2026-02-15 |
+| RBAC matrix approved and mapped to rule tests | PASS | `docs/SecurityContract.md`, `firestore.rules`, `firestore.rules.test.ts`, command: `npm run firebase:rules:test` (20/20 passed) | Forge + Sentinel | 2026-02-15 |
+| Aggregate strategy approved (delta updates + nightly reconciliation) | PASS | `docs/AggregateContract.md` | Forge | 2026-02-15 |
+| Firebase environment model validated for `dev/staging/prod` | PASS | `docs/PlatformBootstrap.md`, `.firebaserc`, `firebase.json`, emulator UI confirmed | Forge | 2026-02-15 |
+| Local setup reproducible by a second person without undocumented steps | PASS | Independent validation recorded: Windows 11 Home, Node v22.16.0, npm v10.9.2, run window 2026-02-15 04:00-04:30, result PASS; blocker resolved by installing Java for emulator runtime | Alberto | 2026-02-15 |
+
+Current Phase 0 exit gate result: **FULLY PASSED**.
+
 ---
 
 ## Phase 1 - Internal Pilot (Weeks 3-8)
@@ -114,6 +127,49 @@ Training compliance tracking only.
 - Data accuracy validated
 - No manual spreadsheets required for compliance reporting
 - Dashboard loads from aggregate docs (no heavy full recount on normal reads)
+
+### Phase 1 Work Breakdown (Execution)
+
+P1.0 UX Wireframes (Lumen + Sentinel) - First Task
+- Create low-fidelity wireframes before implementation for:
+  - Org dashboard
+  - School dashboard
+  - Staff profile
+  - Training record form and drill-down
+- Ensure states and reason codes align with `docs/UXTruthContract.md` and `docs/ComplianceDecisionTable.md`.
+- Artifact location:
+  - `docs/ux/Wireframes.md`
+  - `docs/ux/wireframes/`
+- Status: draft baseline created, ready for visual export/review.
+
+P1.1 Foundation Wiring (Forge)
+- Wire Firebase auth/session flow in app.
+- Implement repository/server-action pattern with Zod validation.
+- Enforce org and role scoping in server paths.
+
+P1.2 Core Entity Flows (Forge + Sentinel)
+- Implement CRUD for staff, training types, and training records.
+- Validate writes against data/security contracts.
+
+P1.3 Compliance Engine Integration (Sentinel + Forge)
+- Integrate status computation from canonical rule contract.
+- Ensure missing required records and expiry states are reflected in UI and aggregates.
+
+P1.4 Aggregate Pipeline Integration (Forge)
+- Run aggregate delta updates on relevant writes.
+- Use aggregate docs as primary dashboard read path.
+
+P1.5 Dashboard and Drill-Down UI (Lumen)
+- Build org and school dashboards with risk-priority sorting.
+- Build staff-level drill-down with reason codes and freshness indicators.
+
+P1.6 Audit and Reliability (Sentinel + Forge)
+- Ensure immutable audit log writes from trusted server paths.
+- Add operational logging for aggregate and compliance update failures.
+
+P1.7 QA and Pilot Readiness (All)
+- Run security rules suite and core UI/flow checks.
+- Validate seeded onboarding flow for pilot schools.
 
 ---
 

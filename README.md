@@ -11,6 +11,7 @@ npm install
 Then bootstrap environment:
 
 Create `.env.local` from `.env.example` and fill the Firebase dev values.
+Ensure Java (JRE/JDK) is installed locally before running Firebase emulators.
 
 Start Firebase emulators:
 

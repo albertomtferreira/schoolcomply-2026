@@ -72,6 +72,9 @@ NPM scripts:
 - `npm run firebase:login`
 - `npm run firebase:emulators`
 
+Prerequisite:
+- Java Runtime Environment (JRE/JDK) must be installed locally for Firebase emulators.
+
 ---
 
 ## 4. Reproducible Setup Steps
@@ -110,4 +113,3 @@ Before promoting config from `dev` to `staging` or `prod`:
 - Local emulator workflow is reproducible from clean clone.
 - Firebase SDK bootstrap modules exist for client and server.
 - Core Firebase config files exist (`firebase.json`, `.firebaserc`).
-

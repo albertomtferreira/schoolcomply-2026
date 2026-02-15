@@ -10,6 +10,7 @@ Canonical companions:
 - `docs/ComplianceDecisionTable.md`
 - `docs/Architecture.md`
 - `docs/Guidelines.md`
+- `docs/ux/Wireframes.md`
 
 ---
 
@@ -42,7 +43,41 @@ Non-negotiable:
 
 ---
 
-## 3. Filter Contract
+## 3. App Shell and Scope Switching Contract
+
+Global shell requirements:
+- Persistent left sidebar navigation on authenticated app pages.
+- Persistent top scope bar containing:
+  - organisation switcher
+  - school switcher
+  - optional date range and user menu controls
+
+Scope switching behavior:
+- Page data must always resolve from current `(orgId, schoolId)` scope selection.
+- If user has a single org, org switcher is read-only.
+- School switcher options must be constrained by selected org and user RBAC scope.
+- Route changes must preserve scope selection where valid.
+- If scope becomes invalid (for example role/scope change), UI must reset to nearest valid scope and notify user.
+
+---
+
+## 4. Modal Interaction Contract
+
+Modal-first pattern:
+- Use modals for create/edit/update flows to preserve page context.
+- Use drawer/slide-over for secondary details (for example audit timeline).
+- Use confirmation modal for destructive actions.
+
+Modal behavior rules:
+- Single-modal depth only (no nested modal stacks).
+- Must support keyboard focus trap and `Esc` close.
+- Primary action must be explicit (`Save`, `Archive`, `Confirm`).
+- On success: close modal, refresh affected view section, show toast/feedback.
+- On validation error: keep modal open and show field-level errors.
+
+---
+
+## 5. Filter Contract
 
 Minimum filters for org and school dashboards:
 - `state` (multi-select): `compliant`, `expiring_soon`, `non_compliant`, `no_active_staff` (school-level contexts only)
@@ -57,7 +92,7 @@ Filter behavior:
 
 ---
 
-## 4. Sorting and Priority Contract
+## 6. Sorting and Priority Contract
 
 Default sort order for risk-first visibility:
 1. `non_compliant`
@@ -71,7 +106,7 @@ Secondary sort:
 
 ---
 
-## 5. Drill-Down Contract
+## 7. Drill-Down Contract
 
 Required drill-down path:
 1. Org dashboard row -> school dashboard
@@ -84,7 +119,7 @@ Drill-down integrity:
 
 ---
 
-## 6. Reason Codes (User-Visible)
+## 8. Reason Codes (User-Visible)
 
 Allowed reason code set for status explanation:
 - `missing_required_record`
@@ -100,7 +135,7 @@ Reason display rules:
 
 ---
 
-## 7. Data Freshness Contract
+## 9. Data Freshness Contract
 
 Freshness source:
 - `lastCalculatedAt` from aggregate docs.
@@ -112,7 +147,7 @@ Display rules:
 
 ---
 
-## 8. Empty and Error State Contract
+## 10. Empty and Error State Contract
 
 Minimum empty/error states:
 - No schools in org -> onboarding empty state with clear action.
@@ -122,17 +157,18 @@ Minimum empty/error states:
 
 ---
 
-## 9. Accessibility and Copy Contract
+## 11. Accessibility and Copy Contract
 
 - Badge labels must be text-visible, not color-only.
 - Red/Amber/Green states require icon + label pairing.
+- Modals must be fully keyboard-accessible with visible focus states.
 - Use plain language:
   - "Non-Compliant", not technical error codes
   - "Expiring Soon", not ambiguous "Warning"
 
 ---
 
-## 10. Acceptance Criteria (Phase 0.6 Minimum)
+## 12. Acceptance Criteria (Phase 1 UX Baseline)
 
 1. All four canonical states render consistently across org, school, and staff views where applicable.
 2. Missing required record always surfaces as `non_compliant`.
@@ -142,13 +178,23 @@ Minimum empty/error states:
 6. `lastCalculatedAt` is visible on dashboards.
 7. Stale-data banner appears when freshness threshold is exceeded.
 8. `no_active_staff` appears as grey and is excluded from red counts.
+9. Sidebar and scope bar remain persistent across page navigation.
+10. Scope switching updates content to selected org/school without stale cross-scope data.
+11. Create/edit flows run in modal context with required accessibility behavior.
 
 ---
 
-## 11. Sign-Off Checklist (Phase 0.6)
+## 13. Sign-Off Checklist (Phase 1 UX Baseline)
 
 - State identifiers match `docs/ComplianceDecisionTable.md`.
-- Badge, filter, and sort contracts are explicit and testable.
+- App shell, badge, filter, and sort contracts are explicit and testable.
 - Reason code set is fixed and implementation-ready.
 - Freshness and error behavior prevent false trust in stale data.
+- Modal behavior is explicit and accessibility-compliant.
 
+---
+
+## 14. Wireframe References (Phase 1)
+
+- Wireframe specification: `docs/ux/Wireframes.md`
+- Wireframe image exports: `docs/ux/wireframes/`

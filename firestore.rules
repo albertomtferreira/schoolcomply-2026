@@ -25,7 +25,10 @@ service cloud.firestore {
     }
 
     function isSuperadmin() {
-      return signedIn() && request.auth.token.superadmin == true;
+      return signedIn()
+        && request.auth.token is map
+        && ('superadmin' in request.auth.token)
+        && request.auth.token.superadmin == true;
     }
 
     function isOrgAdmin(orgId) {
@@ -105,7 +108,7 @@ service cloud.firestore {
         allow read: if canReadOrgScoped(orgId)
           && (
             isOrgAdmin(orgId)
-            || hasAnySchoolScope(orgId, resource.data.schoolIds)
+            || ((isSchoolAdmin(orgId) || isViewer(orgId)) && hasAnySchoolScope(orgId, resource.data.schoolIds))
             || isSelfStaff(orgId, staffId)
           );
 
