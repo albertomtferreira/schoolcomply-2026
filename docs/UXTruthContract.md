@@ -5,6 +5,7 @@ Status: approved UX baseline for implementation.
 Last updated: 2026-02-15.
 
 Canonical companions:
+
 - `docs/Architecture.md`
 - `docs/Guidelines.md`
 - `docs/ComplianceDecisionTable.md`
@@ -22,6 +23,7 @@ Canonical companions:
 ## 2. Sidebar Structure
 
 Required order:
+
 1. User menu section
 2. Role-aware management section
 3. Module navigation section
@@ -29,6 +31,7 @@ Required order:
 ### 2.1 User Menu Section
 
 Must include:
+
 - signed-in user identity
 - profile/settings entry
 - sign-out action
@@ -36,6 +39,7 @@ Must include:
 ### 2.2 Role-Aware Management Section
 
 Visibility depends on role:
+
 - `platform_admin`: can manage orgs and platform-level setup
 - `org_admin`: can manage org settings, schools, users, module subscriptions
 - `school_admin`: can manage assigned schools and school-level staff
@@ -48,6 +52,7 @@ Visibility depends on role:
 - Selecting a module reveals child links.
 
 TrainingTrack required children:
+
 - `Dashboard`
 - `Training Records`
 - `Staff`
@@ -58,16 +63,19 @@ TrainingTrack required children:
 ## 3. Routing Contract
 
 Route pattern:
+
 - `/app/{moduleId}` for module default dashboard
 - `/app/{moduleId}/{child}` for child pages
 
 Examples:
+
 - `/app/trainingTrack/dashboard`
 - `/app/trainingTrack/training-records`
 - `/app/trainingTrack/staff`
 - `/app/trainingTrack/training-definitions`
 
 Behavior:
+
 - Keep selected org/school context while navigating between children.
 - If user loses entitlement for current route, redirect to nearest allowed page.
 

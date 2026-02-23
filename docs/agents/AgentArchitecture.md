@@ -27,14 +27,14 @@ Above the core domain team is the governance and execution layer:
 
 # Interaction Model
 
-| Role | Works Closely With | Purpose |
-| --- | --- | --- |
-| Atlas | Alberto + Mercury + all core agents | Strategic alignment and roadmap discipline |
-| Forge | Alberto + Sentinel | Technical architecture, security, and compliance-safe implementation patterns |
-| Sentinel | Alberto + Forge + Lumen | Compliance logic integrity, auditability, and rule accuracy |
-| Lumen | Alberto + Sentinel | Clear leadership-facing UX and accessibility standards |
-| Mercury | Alberto + Atlas | Monetisation and go-to-market alignment without MVP overload |
-| Alberto | All 5 core agents | Governance, execution orchestration, conflict resolution, and delivery ownership |
+| Role     | Works Closely With                  | Purpose                                                                          |
+| -------- | ----------------------------------- | -------------------------------------------------------------------------------- |
+| Atlas    | Alberto + Mercury + all core agents | Strategic alignment and roadmap discipline                                       |
+| Forge    | Alberto + Sentinel                  | Technical architecture, security, and compliance-safe implementation patterns    |
+| Sentinel | Alberto + Forge + Lumen             | Compliance logic integrity, auditability, and rule accuracy                      |
+| Lumen    | Alberto + Sentinel                  | Clear leadership-facing UX and accessibility standards                           |
+| Mercury  | Alberto + Atlas                     | Monetisation and go-to-market alignment without MVP overload                     |
+| Alberto  | All 5 core agents                   | Governance, execution orchestration, conflict resolution, and delivery ownership |
 
 ---
 
@@ -76,4 +76,3 @@ Each protects a layer of the product.
 Together, they ensure the SchoolTrack platform becomes:
 
 **Reliable. Simple. Visual. Scalable.**
-

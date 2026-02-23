@@ -5,6 +5,7 @@ Status: approved for rules implementation.
 Last updated: 2026-02-15.
 
 Canonical companions:
+
 - `docs/Architecture.md`
 - `docs/DataContract.md`
 - `firestore.rules`
@@ -14,6 +15,7 @@ Canonical companions:
 ## 1. Authorization Inputs
 
 Every request must satisfy all checks:
+
 1. `request.auth != null`
 2. `users/{uid}` exists and `isActive == true`
 3. target org exists and is active
@@ -25,6 +27,7 @@ Every request must satisfy all checks:
 ## 2. Entitlement Rule
 
 Module access is allowed only when both are true:
+
 1. `moduleId in orgs/{orgId}.subscribedModules`
 2. `moduleId in orgs/{orgId}/members/{uid}.enabledModules`
 
@@ -34,19 +37,20 @@ If either condition fails: deny.
 
 ## 3. Role Matrix
 
-| Resource | platform_admin | org_admin | school_admin | staff | viewer |
-| --- | --- | --- | --- | --- | --- |
-| `users/{uid}` self | R/W | R/W self | R/W self | R/W self | R/W self |
-| `users/*` any | R/W | no | no | no | no |
-| `orgs/{orgId}` | R/W | R/W | R | R | R |
-| `orgs/{orgId}/members/*` | R/W | R/W | R (scoped) | R self | R (scoped) |
-| `orgs/{orgId}/schools/*` | R/W | R/W | R/W (scoped) | R (scoped) | R (scoped) |
-| `orgs/{orgId}/staff/*` | R/W | R/W | R/W (scoped) | R self | R (scoped) |
-| `orgs/{orgId}/moduleHealth/*` | R/W | R | R (scoped) | R (limited) | R (scoped) |
-| `orgs/{orgId}/aggregates/*` | R/W | R | R (scoped) | R (limited) | R (scoped) |
-| `orgs/{orgId}/modules/{moduleId}/*` | R/W | R/W (entitled) | R/W (scoped + entitled) | R self-context (entitled) | R (scoped + entitled) |
+| Resource                            | platform_admin | org_admin      | school_admin            | staff                     | viewer                |
+| ----------------------------------- | -------------- | -------------- | ----------------------- | ------------------------- | --------------------- |
+| `users/{uid}` self                  | R/W            | R/W self       | R/W self                | R/W self                  | R/W self              |
+| `users/*` any                       | R/W            | no             | no                      | no                        | no                    |
+| `orgs/{orgId}`                      | R/W            | R/W            | R                       | R                         | R                     |
+| `orgs/{orgId}/members/*`            | R/W            | R/W            | R (scoped)              | R self                    | R (scoped)            |
+| `orgs/{orgId}/schools/*`            | R/W            | R/W            | R/W (scoped)            | R (scoped)                | R (scoped)            |
+| `orgs/{orgId}/staff/*`              | R/W            | R/W            | R/W (scoped)            | R self                    | R (scoped)            |
+| `orgs/{orgId}/moduleHealth/*`       | R/W            | R              | R (scoped)              | R (limited)               | R (scoped)            |
+| `orgs/{orgId}/aggregates/*`         | R/W            | R              | R (scoped)              | R (limited)               | R (scoped)            |
+| `orgs/{orgId}/modules/{moduleId}/*` | R/W            | R/W (entitled) | R/W (scoped + entitled) | R self-context (entitled) | R (scoped + entitled) |
 
 Notes:
+
 - `platform_admin` is for platform operations, not normal school usage.
 - `school_admin`, `staff`, and `viewer` must be constrained by allowed `schoolIds`.
 
@@ -66,6 +70,7 @@ Notes:
 ## 5. Required Rule Paths
 
 Rules must explicitly cover:
+
 - `users/{uid}`
 - `orgs/{orgId}`
 - `orgs/{orgId}/members/{uid}`
@@ -76,6 +81,7 @@ Rules must explicitly cover:
 - `orgs/{orgId}/modules/{moduleId}/{document=**}`
 
 TrainingTrack minimum:
+
 - `orgs/{orgId}/modules/trainingTrack/trainingDefinitions/{definitionId}`
 - `orgs/{orgId}/modules/trainingTrack/trainingRecords/{recordId}`
 - `orgs/{orgId}/modules/trainingTrack/auditLogs/{logId}`

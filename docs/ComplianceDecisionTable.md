@@ -26,14 +26,15 @@ Status: carried forward as canonical rule logic for restart implementation.
 
 Let `now = current date`.
 
-| Condition | Record Status |
-| --- | --- |
-| No matching required record exists | `missing` |
-| `expiresAt < now` | `expired` |
-| `now <= expiresAt <= now + 60 days` | `expiring` |
-| `expiresAt > now + 60 days` | `valid` |
+| Condition                           | Record Status |
+| ----------------------------------- | ------------- |
+| No matching required record exists  | `missing`     |
+| `expiresAt < now`                   | `expired`     |
+| `now <= expiresAt <= now + 60 days` | `expiring`    |
+| `expiresAt > now + 60 days`         | `valid`       |
 
 Notes:
+
 - `missing` is a compliance state for required training evaluation.
 - For non-expiring training types (`expires == false`), a present record is treated as `valid`.
 - Day-boundary rule: `expiresAt` is evaluated in UTC.
@@ -54,12 +55,12 @@ This selected record is the effective record for status evaluation.
 
 ## 3. Staff Compliance Rules
 
-| Condition | Staff Compliance |
-| --- | --- |
-| Any required training is `expired` | `non_compliant` |
-| Any required training is `missing` | `non_compliant` |
-| No required training is `expired` or `missing` and at least one is `expiring` | `expiring_soon` |
-| All required training is `valid` | `compliant` |
+| Condition                                                                     | Staff Compliance |
+| ----------------------------------------------------------------------------- | ---------------- |
+| Any required training is `expired`                                            | `non_compliant`  |
+| Any required training is `missing`                                            | `non_compliant`  |
+| No required training is `expired` or `missing` and at least one is `expiring` | `expiring_soon`  |
+| All required training is `valid`                                              | `compliant`      |
 
 ### 3.1 Staff Status Priority
 
@@ -73,14 +74,15 @@ Evaluate with strict priority:
 
 ## 4. School Compliance Rules
 
-| Condition | School Compliance |
-| --- | --- |
-| Any active linked staff is `non_compliant` | `non_compliant` |
-| No active linked staff is `non_compliant` and at least one is `expiring_soon` | `expiring_soon` |
-| All active linked staff are `compliant` | `compliant` |
-| No active linked staff | `no_active_staff` (neutral state, not red) |
+| Condition                                                                     | School Compliance                          |
+| ----------------------------------------------------------------------------- | ------------------------------------------ |
+| Any active linked staff is `non_compliant`                                    | `non_compliant`                            |
+| No active linked staff is `non_compliant` and at least one is `expiring_soon` | `expiring_soon`                            |
+| All active linked staff are `compliant`                                       | `compliant`                                |
+| No active linked staff                                                        | `no_active_staff` (neutral state, not red) |
 
 Notes:
+
 - Staff can belong to multiple schools (`staff.schoolIds`). A non-compliant staff member affects all linked schools.
 
 ### 4.1 School Status Priority
@@ -96,11 +98,11 @@ Evaluate with strict priority:
 
 ## 5. Organisation Compliance Rules
 
-| Condition | Org Compliance |
-| --- | --- |
-| Any school is `non_compliant` | `non_compliant` |
+| Condition                                                               | Org Compliance  |
+| ----------------------------------------------------------------------- | --------------- |
+| Any school is `non_compliant`                                           | `non_compliant` |
 | No school is `non_compliant` and at least one school is `expiring_soon` | `expiring_soon` |
-| All schools are `compliant` or `no_active_staff` | `compliant` |
+| All schools are `compliant` or `no_active_staff`                        | `compliant`     |
 
 ### 5.1 Org Status Priority
 
@@ -114,12 +116,12 @@ Evaluate with strict priority:
 
 ## 6. UI Color Mapping
 
-| State | Color |
-| --- | --- |
-| `compliant` | Green |
-| `expiring_soon` | Amber |
-| `non_compliant` | Red |
-| `no_active_staff` | Grey |
+| State             | Color |
+| ----------------- | ----- |
+| `compliant`       | Green |
+| `expiring_soon`   | Amber |
+| `non_compliant`   | Red   |
+| `no_active_staff` | Grey  |
 
 ---
 

@@ -5,6 +5,7 @@ Status: active guidance.
 Last updated: 2026-02-15.
 
 Canonical companions:
+
 - `docs/Architecture.md`
 - `docs/UXTruthContract.md`
 - `docs/Implementation.md`
@@ -43,6 +44,7 @@ Canonical companions:
 ## 4. TrainingTrack Information Architecture
 
 Required submenu:
+
 - `Dashboard`
 - `Training Records`
 - `Staff`

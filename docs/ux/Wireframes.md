@@ -28,6 +28,7 @@ Shell layout:
 ```
 
 Rules:
+
 - Sidebar is persistent across authenticated app pages.
 - Top scope bar is persistent and controls rendered data scope.
 - Top bar module navbar shows only modules available to current user.
@@ -38,6 +39,7 @@ Rules:
   3. selected school (when applicable)
 - If user has one organisation, org selector is locked/read-only.
 - School selector options must always be constrained by current org and user scope.
+
 ---
 
 ## 2. Screen Map (Inside App Shell)
@@ -75,6 +77,7 @@ Layout:
 ```
 
 Behavior:
+
 - Default sort: `non_compliant` -> `expiring_soon` -> `compliant` -> `no_active_staff`.
 - Row click opens School Dashboard.
 - If `lastCalculatedAt` > 24h old, show stale-data banner.
@@ -103,6 +106,7 @@ Layout:
 ```
 
 Behavior:
+
 - Primary reason must show one of:
   - `missing_required_record`
   - `expired_required_record`
@@ -135,6 +139,7 @@ Layout:
 ```
 
 Behavior:
+
 - Checklist rows show deterministic status from rule contract.
 - Missing required training is visibly red and blocks compliance.
 
@@ -167,6 +172,7 @@ Layout:
 ```
 
 Behavior:
+
 - No direct editing of derived fields (`status`, `daysToExpiry`).
 - Save path writes audit log and triggers aggregate update pipeline.
 
@@ -175,17 +181,20 @@ Behavior:
 ## 7. Modal Interaction Pattern (Preferred)
 
 Modal-first UX guidance:
+
 - Use modals for create/edit/update flows to preserve page context.
 - Use slide-over/drawer for secondary detail (for example: audit timeline).
 - Keep destructive actions in confirmation modals.
 
 Modal rules:
+
 - Must trap focus and support `Esc` to close.
 - Must not hide critical compliance alerts behind nested modals.
 - Do not stack more than one modal level.
 - On successful save, close modal and refresh affected section with success feedback.
 
 Primary modal candidates:
+
 - Add Training Record
 - Edit/Replace Record
 - Create Staff
@@ -197,12 +206,14 @@ Primary modal candidates:
 ## 8. Canonical State and Badge Contract
 
 Use only:
+
 - `compliant` -> green
 - `expiring_soon` -> amber
 - `non_compliant` -> red
 - `no_active_staff` -> grey (school-level neutral)
 
 Reason codes (user visible):
+
 - `missing_required_record`
 - `expired_required_record`
 - `expiring_soon_required_record`
@@ -264,6 +275,7 @@ Goal: allow scoped admins to create or update staff safely.
 ```
 
 Behavior:
+
 - On create, write shared `staff/{staffId}` with scoped school IDs.
 - On edit, preserve immutable IDs and write audit entry.
 - If school selection includes out-of-scope IDs, block save with explicit error.
@@ -292,6 +304,7 @@ Goal: configure requirement logic that drives compliance decisions.
 ```
 
 Behavior:
+
 - `required=true` overrides role-based requirement mapping.
 - If `expires=false`, hide/disable validity-day input.
 - Save triggers aggregate recomputation event.
@@ -316,6 +329,7 @@ Goal: reduce accidental destructive actions and make impacts explicit.
 ```
 
 Behavior:
+
 - Primary action is destructive-styled and requires explicit confirmation.
 - On success, show toast + refresh impacted dashboard sections.
 
@@ -343,6 +357,7 @@ Goal: provide traceable history for compliance-affecting changes.
 ```
 
 Behavior:
+
 - Read-only view; no inline edit capability.
 - Diffs should prefer concise before/after display for key fields.
 
@@ -360,6 +375,7 @@ Goal: explain access denial without leaving ambiguity.
 ```
 
 Behavior:
+
 - Returned for unentitled module routes.
 - Must not leak module data shape in error payload.
 
@@ -376,6 +392,7 @@ Goal: notify user when current scope is auto-corrected to a valid scope.
 ```
 
 Behavior:
+
 - Trigger after role/scope changes or stale deep links.
 - Preserve route when possible; otherwise redirect to module root with banner.
 
@@ -384,6 +401,7 @@ Behavior:
 Goal: standardize data lifecycle rendering across dashboards and lists.
 
 Loading:
+
 ```txt
 [KPI Skeleton Blocks]
 [Filter Skeleton Row]
@@ -391,6 +409,7 @@ Loading:
 ```
 
 Error:
+
 ```txt
 Data unavailable.
 Last known update: <timestamp or unknown>
@@ -398,12 +417,14 @@ Last known update: <timestamp or unknown>
 ```
 
 Empty Filter Result:
+
 ```txt
 No results match current filters.
 [Clear Filters]
 ```
 
 Behavior:
+
 - Retain active filters and scope on retry.
 - Preserve last known timestamp where available.
 
@@ -420,6 +441,7 @@ Certificate Upload
 ```
 
 Behavior:
+
 - Validate type and size before upload begins.
 - Save disabled while upload is in progress.
 
@@ -428,6 +450,7 @@ Behavior:
 ## 13. Wireframe Backlog for PNG Export
 
 When visual exports begin, produce PNGs for:
+
 1. Org Dashboard
 2. School Dashboard
 3. Staff Profile
@@ -440,4 +463,3 @@ When visual exports begin, produce PNGs for:
 10. Scope Reset Banner State
 11. Loading/Error/Empty states (dashboard variants)
 12. Upload state variants
-

@@ -5,6 +5,7 @@ Status: active baseline for restart.
 Last updated: 2026-02-15.
 
 Canonical companions:
+
 - `docs/Architecture.md`
 - `docs/SecurityContract.md`
 - `.env.example`
@@ -20,6 +21,7 @@ Canonical companions:
 - `prod`: production
 
 Aliases remain:
+
 - `dev -> schooltrack-dev`
 - `staging -> schooltrack-staging`
 - `prod -> schooltrack-prod`
@@ -51,6 +53,7 @@ Aliases remain:
 ## 4. Baseline Verification
 
 Minimum checks:
+
 - app boots locally
 - auth flow works against emulator
 - Firestore read/write paths match restart contract:
@@ -62,6 +65,7 @@ Minimum checks:
 ## 5. Promotion Controls
 
 Before `dev -> staging`:
+
 - `docs/DataContract.md` and `docs/SecurityContract.md` unchanged or intentionally versioned
 - rules tests pass
 - implementation note updated in `docs/Implementation.md`
